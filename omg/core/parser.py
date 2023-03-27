@@ -6,9 +6,7 @@ import logging
 import shutil
 
 
-from omg.core.odoo import Odoo
-from omg.core.module import Module
-from omg.core.models import File
+from omg.odoo import Odoo
 from omg.core.git import git_branch, git_checkout
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
@@ -22,6 +20,8 @@ class Parser(object):
         self.path = path
         self.modules = {}
 
+        self._odoo = None
+
     @classmethod
     def from_path(cls, path, modules=None):
         self = cls(path)
@@ -29,15 +29,14 @@ class Parser(object):
         if not isinstance(modules, list):
             modules = list(set(map(str.strip, modules.split(","))))
 
-        # module = Module.from_path(path)
         odoo = Odoo.from_path(path)
 
         for k, v in odoo.modules.items():
             if v.name not in modules:
                 continue
-            module = Module.from_odoo(v)
-            module.path = path
-            self.modules[k] = module
+            self.modules[k] = v
+
+        self._odoo = odoo
 
         return self
 

@@ -7,7 +7,8 @@ import logging
 from collections import namedtuple
 
 
-from omg.core.model import Model
+from omg.odoo import OdooModel
+from omg.odoo.model import Model
 from omg.core.tools import generate
 from omg.core.models import File
 
@@ -16,29 +17,19 @@ MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 _logger = logging.getLogger(__name__)
 
 
-class Module(object):
-    def __init__(self):
-        self.models = set()
-        self.path = ""
-        self.name = ""
-        self.manifest = dict()
-        self.models = dict()
-        self.files = set()
-        self.status = set()
-        self.imports = set()
+class Module(OdooModel):
+    def _parse_class_def(self, obj: ast.ClassDef, content: str) -> None:
+        """Overrided to replace Model"""
 
-    @classmethod
-    def from_odoo(cls, obj):
-        self = cls()
+        model = Model.from_ast(obj, content)
+        if not model.is_model():
+            self.classes[model.name] = model
+            return
 
-        self.name = obj.name
-        self.manifest = obj.manifest
-
-        for k, v in obj.models.items():
-            model = Model.from_odoo(v)
-            self.models[k] = model
-
-        return self
+        if model.name in self.models:
+            self.models[model.name].update(model)
+        else:
+            self.models[model.name] = model
 
     def sanitize_manifest(self):
         DEFAULT_MANIFEST = {
@@ -94,5 +85,5 @@ class Module(object):
 
         return files
 
-    def __repr__(self) -> str:
-        return f"<Module: {self.name}>"
+    # def __repr__(self) -> str:
+    #     return f"<Module: {self.name}>"

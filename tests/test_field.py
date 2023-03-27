@@ -4,7 +4,7 @@ import logging
 
 from black import format_str, FileMode
 
-from omg.core.field import Field
+from omg.odoo import Model
 
 _logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 def run_test_field(src, name, ttype, args, keywords):
     # assert isinstance(parsed, ast.Assign)
 
-    field = Field.from_string(src)
+    field = Model.field_from_string(src)
 
     assert repr(field) == f"<Field ({ttype}): {name}>"
 

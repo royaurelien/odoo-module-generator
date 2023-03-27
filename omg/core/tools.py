@@ -15,9 +15,6 @@ from black.parsing import InvalidInput
 import jinja2
 from jinja2.exceptions import UndefinedError
 
-from omg.core.models import FakeModel
-from omg.core.odoo import _parse_assign
-
 
 _logger = logging.getLogger(__name__)
 
@@ -73,14 +70,6 @@ def get_assign(src):
     return function(obj)
 
 
-def get_field_from_source(content):
-    parsed = get_assign(content)
-    model = FakeModel()
-    _parse_assign(model, parsed, content)
-
-    return model.field
-
-
 def dict_to_list(data, keys=None):
     def function(item):
         return f'{item}="{data[item]}"'
@@ -91,3 +80,48 @@ def dict_to_list(data, keys=None):
         items = data
 
     return list(map(function, items))
+
+
+def get_keyword(obj):
+    name = obj.arg
+    value = obj.value
+
+    if isinstance(value, ast.Constant):
+        value = value.value
+
+    return (name, value)
+
+
+def get_arg(obj):
+    value = obj
+
+    if isinstance(value, ast.Constant):
+        value = value.value
+    elif isinstance(value, ast.List):
+        result = []
+
+        for child in value.elts:
+            res = []
+            if isinstance(child, ast.Tuple):
+                for cc in child.elts:
+                    if isinstance(cc, ast.Constant):
+                        res.append(cc.value)
+                        continue
+                    if isinstance(cc, ast.Call):
+                        tmp = f"{cc.func.id}({cc.args[0].value})"
+                        res.append(tmp)
+                        continue
+            result.append(res)
+        print(result)
+        value = ast.dump(value)
+
+        # value = ast.literal_eval(value)
+
+        # print(value)
+        # exit(1)
+    # else:
+    #     print(type(obj))
+    #     exit(1)
+
+    # return f'"{value}"'
+    return value

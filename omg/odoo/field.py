@@ -3,38 +3,25 @@
 
 import logging
 
-from omg.core.tools import get_field_from_source, dict_to_list
+from omg.odoo import OdooField
+from omg.core.tools import dict_to_list
 
 _logger = logging.getLogger(__name__)
 
 
-class Field(object):
-    def __init__(self, name, ttype):
+class Field(OdooField):
+    def __init__(self, name: str, ttype: str, definition: str = None, **kwargs: dict):
         self.name = name
         self.ttype = ttype
-        self.src = None
+        self.definition = definition
         self.args = []
         self.keywords = {}
 
+        # args, keywords
+        self.__dict__.update(kwargs)
+
     def __repr__(self) -> str:
         return f"<Field ({self.ttype}): {self.name}>"
-
-    @classmethod
-    def from_odoo(cls, obj, name):
-        self = cls(name, obj.ttype)
-
-        self.args = obj.args
-        self.keywords = obj.keywords
-
-        assert hasattr(obj, "definition"), "No definition"
-
-        return self
-
-    @classmethod
-    def from_string(cls, content):
-        obj = get_field_from_source(content)
-
-        return Field.from_odoo(obj, obj.name)
 
     def get_definition(self, keywords=True):
         # if keywords:
