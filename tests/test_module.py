@@ -4,7 +4,7 @@
 import os
 from unittest import mock
 
-from odoo_analyse import Model, Module, Record, module
+from omg.odoo import Module
 
 
 def get_module():

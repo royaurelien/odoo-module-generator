@@ -5,6 +5,7 @@ import logging
 
 # import odoo_analyse
 from odoo_analyse import Odoo as OOdoo
+from odoo_analyse import Module as OdooModule
 from odoo_analyse import Model as OdooModel
 from odoo_analyse.field import Field as OdooField
 from odoo_analyse.utils import get_ast_source_segment

@@ -7,7 +7,7 @@ import logging
 from collections import namedtuple
 
 
-from omg.odoo import OdooModel
+from omg.odoo import OdooModule
 from omg.odoo.model import Model
 from omg.core.tools import generate
 from omg.core.models import File
@@ -17,7 +17,7 @@ MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 _logger = logging.getLogger(__name__)
 
 
-class Module(OdooModel):
+class Module(OdooModule):
     def _parse_class_def(self, obj: ast.ClassDef, content: str) -> None:
         """Overrided to replace Model"""
 
@@ -84,6 +84,3 @@ class Module(OdooModel):
         print(f.content)
 
         return files
-
-    # def __repr__(self) -> str:
-    #     return f"<Module: {self.name}>"
