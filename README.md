@@ -1,0 +1,3 @@
+# Devloppement
+
+pip install -e .
