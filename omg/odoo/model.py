@@ -81,7 +81,6 @@ class Model(OdooModel):
         elif assign == "_inherits":
             inhs = ast.literal_eval(value)
             if isinstance(inhs, dict):
-                print(inhs)
                 self.inherits.update(inhs)
                 self.fields.update({k: Field(k, "Many2one") for k in inhs.values()})
         elif isinstance(value, ast.Call):
@@ -96,15 +95,6 @@ class Model(OdooModel):
                 # Store args and keywords
                 args = list(map(get_arg, value.args))
                 keywords = dict(map(get_keyword, value.keywords))
-
-                if args:
-                    if ttype in ["Many2one"]:
-                        if len(args) == 1:
-                            keywords["comodel_name"] = args[0]
-                            args = []
-                        elif len(args) == 2:
-                            keywords["comodel_name"], keywords["string"] = args
-                            args = []
 
                 self.fields[assign] = Field(
                     assign,
