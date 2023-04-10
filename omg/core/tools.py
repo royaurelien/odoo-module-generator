@@ -19,7 +19,7 @@ from jinja2.exceptions import UndefinedError
 _logger = logging.getLogger(__name__)
 
 File = namedtuple("File", ["name", "path", "content"])
-TEMPLATE_DIR = os.path.abspath("omg/static/")
+TEMPLATE_DIR = os.path.abspath("static/")
 
 
 def generate(template: str, data: dict, filename: str, functions=None) -> File:
@@ -65,7 +65,7 @@ def get_assign(src):
 
     # src = format_str(src, mode=FileMode())
     src = src.strip('"')
-    print(src)
+    # print(src)
     obj = ast.parse(src)
     return function(obj)
 
@@ -112,7 +112,7 @@ def get_arg(obj):
                         res.append(tmp)
                         continue
             result.append(res)
-        print(result)
+        # print(result)
         value = ast.dump(value)
 
         # value = ast.literal_eval(value)

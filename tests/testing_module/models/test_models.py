@@ -21,6 +21,7 @@ class TestModel(models.Model):
 
 
 class ResUsers(models.Model):
+    _name = "res.users"
     _inherit = ["res.users", "test.abstract"]
 
     def _get_default(self):

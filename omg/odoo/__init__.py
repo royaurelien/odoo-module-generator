@@ -2,6 +2,9 @@
 #!/bin/python3
 
 import logging
+from io import StringIO
+import json
+import sys
 
 # import odoo_analyse
 from odoo_analyse import Odoo as OOdoo
@@ -28,3 +31,22 @@ class Odoo(OOdoo):
 
         self.full.update(result.copy())
         self.modules.update(result.copy())
+
+    def export(self):
+        output = StringIO()
+
+        # Capture stdout to buffer
+        sys.stdout = output
+        self.analyse("-")
+        sys.stdout = sys.__stdout__
+
+        data = json.loads(output.getvalue())
+
+        for name in data.keys():
+            vals = self.modules[name].to_json()
+            data[name].update(vals)
+
+            x = data[name].setdefault("missing_dependency", {})
+            # data[name]["missing_dependency"] = x
+
+        return data

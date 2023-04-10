@@ -50,7 +50,6 @@ class Config(object):
     def create_default(self):
         self.options = Options(**DEFAULT_OPTIONS)
         data = self.options._asdict()
-        print(data)
 
         save_to_json(self._path, data)
 

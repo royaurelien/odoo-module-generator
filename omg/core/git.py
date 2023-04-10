@@ -23,13 +23,13 @@ def git_init(path):
 
 def git_branch(path):
     res = False
-    print(path)
+    # print(path)
 
     try:
         res = git(["branch", "--show-current"], _cwd=path)
         res = res.rstrip().strip()
     except ErrorReturnCode_128:
-        print("pas de depot")
+        # print("pas de depot")
         git_init(path)
         return git_branch(path)
 

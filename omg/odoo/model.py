@@ -11,25 +11,55 @@ from omg.core.tools import generate, get_arg, get_keyword, get_assign
 from omg.core.models import File
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
+MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]
 
 _logger = logging.getLogger(__name__)
 
 
 class Model(OdooModel):
+    def __init__(self, name=None, inherit=None, inherits=None, fields=None, funcs=None):
+        super().__init__(name, inherit, inherits, fields, funcs)
+        self.ttype = None
+
     @property
-    def has_fields(self):
+    def is_stored(self) -> bool:
+        return self.ttype == "Model"
+
+    @property
+    def has_fields(self) -> bool:
         return bool(self.fields)
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         return self.name.replace(".", "_")
 
     @property
-    def classname(self):
+    def classname(self) -> str:
         return "".join(map(str.capitalize, self.name.split(".")))
 
     @classmethod
-    def field_from_string(cls, content):
+    def from_ast(cls, obj: ast.ClassDef, content: str) -> "Model":
+        model = super().from_ast(obj, content)
+
+        # Attribute(value=Name(id='models', ctx=Load()), attr='Model', ctx=Load())
+        # Name(id='RPC', ctx=Load())
+        # Attribute(value=Name(id='models', ctx=Load()), attr='TransientModel', ctx=Load())
+
+        ttype = None
+        for child in obj.bases:
+            if isinstance(child, ast.Attribute) and isinstance(child.value, ast.Name):
+                ttype = child.attr
+                break
+            if isinstance(child, ast.Name):
+                ttype = child.id
+                break
+
+        model.ttype = ttype
+
+        return model
+
+    @classmethod
+    def field_from_string(cls, content) -> Field:
         obj = get_assign(content)
         model = Model("test.test")
         model._parse_assign(obj, content)

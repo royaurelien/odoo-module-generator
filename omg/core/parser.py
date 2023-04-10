@@ -4,6 +4,9 @@
 import os
 import logging
 import shutil
+from io import StringIO
+import sys
+import json
 
 
 from omg.odoo import Odoo
@@ -26,13 +29,13 @@ class Parser(object):
     def from_path(cls, path, modules=None):
         self = cls(path)
 
-        if not isinstance(modules, list):
+        if modules and not isinstance(modules, list):
             modules = list(set(map(str.strip, modules.split(","))))
 
         odoo = Odoo.from_path(path)
 
         for k, v in odoo.modules.items():
-            if v.name not in modules:
+            if modules and v.name not in modules:
                 continue
             self.modules[k] = v
 
@@ -65,3 +68,15 @@ class Parser(object):
 
                 with open(filepath, "w") as f:
                     f.write(file.content)
+
+    def analyze(self):
+        output = StringIO()
+
+        # Capture stdout to buffer
+        sys.stdout = output
+        self._odoo.analyse("-")
+        sys.stdout = sys.__stdout__
+
+        data = json.loads(output.getvalue())
+
+        return data

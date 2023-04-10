@@ -22,6 +22,7 @@ class Module(OdooModule):
         """Overrided to replace Model"""
 
         model = Model.from_ast(obj, content)
+
         if not model.is_model():
             self.classes[model.name] = model
             return
@@ -81,6 +82,50 @@ class Module(OdooModule):
 
         f = generate("manifest.jinja2", dict(manifest=self.manifest), "__manifest__")
         files[f.name] = f
-        print(f.content)
+        # print(f.content)
 
         return files
+
+    def to_json(self):
+        languages = {k: v["lines"] for k, v in self.language.items()}
+
+        data = {
+            "path": self.path,
+            "name": self.name,
+            "duration": self.duration,
+            "manifest": self.manifest,
+            "models": {n: m.to_json() for n, m in self.models.items()},
+            "classes": {n: c.to_json() for n, c in self.classes.items()},
+            "views": {n: v.to_json() for n, v in self.views.items()},
+            "records": {n: d.to_json() for n, d in self.records.items()},
+            "depends": list(self.depends),
+            "imports": list(self.imports),
+            "refers": list(self.refers),
+            "files": list(self.files),
+            "status": list(self.status),
+            "language": self.language,
+            "words": list(self.words),
+            "hashsum": self.hashsum,
+            "readme": bool(self.readme),
+            "readme_type": self.readme_type,
+            "author": self.author,
+            "category": self.category,
+            "license": self.license,
+            "version": self.version,
+            "info": self.info,
+            "models_count": self.info.get("model_count", 0),
+            "class_count": self.info.get("class_count", 0),
+            "records_count": self.info.get("record_count", 0),
+            "views_count": self.info.get("view_count", 0),
+            "depends_count": self.info.get("depends", 0),
+            "PY": languages.get("Python", 0),
+            "XML": languages.get("XML", 0),
+            "JS": languages.get("JavaScript", 0),
+            # "fields_count": len(self.fields),
+            # "python": self.language.get("Python", 0),
+            # "xml": self.language.get("Xml", 0),
+        }
+        if self.manifest and "data" in self.manifest:
+            data["manifest"]["data"] = list(data["manifest"]["data"])
+
+        return data

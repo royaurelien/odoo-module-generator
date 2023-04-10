@@ -2,6 +2,9 @@
 #!/bin/python3
 
 import click
+from tabulate import tabulate
+import pandas as pd
+import numpy as np
 
 from omg.core.config import Config
 from omg.core.parser import Parser
@@ -15,12 +18,94 @@ def cli():
     """Odoo Module Generator"""
 
 
+def extract(items):
+    res = []
+    for item in items:
+        if isinstance(item, list):
+            # line = ", ".join(map(str, item))
+            line = len(item)
+        elif isinstance(item, dict):
+            line = ", ".join([f"{k}: {v}" for k, v in item.items()])
+        else:
+            line = item
+        res.append(line)
+    return res
+
+
 @click.command()
 @click.argument("path")
-def parse(path, **kwargs):
-    parser = Parser.from_path(path)
-    for module in parser.get_modules():
-        module.skeleton()
+@click.option("--modules", "-m", required=False, type=str, help="Modules")
+def stats(path, modules=None, **kwargs):
+    parser = Parser.from_path(path, modules)
+
+    # data = parser.analyze()
+
+    data = parser._odoo.export()
+
+    columns = {
+        "index": "name",
+        # "model_count": "models",
+        # "record_count": "records",
+    }
+
+    df = pd.DataFrame(data).transpose()
+    df.reset_index(inplace=True)
+    df.rename(columns=columns, inplace=True)
+
+    df["missing"] = np.where(df["missing_dependency"].isnull(), False, True)
+    df["missing_dependency"] = df["missing_dependency"].apply(
+        lambda row: ", ".join(row) if isinstance(row, list) else row
+    )
+    df["depends"] = df["depends"].apply(
+        lambda row: ", ".join(sorted(row)) if isinstance(row, list) else row
+    )
+    df["language"] = df["language"].apply(
+        lambda row: ", ".join([f"{k}: {v}" for k, v in row.items()])
+    )
+    df["missing_dependency"] = df["missing_dependency"].fillna("")
+    df = df.replace([0], "-")
+
+    selection = [
+        "name",
+        "author",
+        "version",
+        "models_count",
+        "fields",
+        # "record_count",
+        "records_count",
+        "views_count",
+        "class_count",
+        # "depends_count",
+        "PY",
+        "XML",
+        "JS",
+        # "missing",
+        # "missing_dependency",
+        # "language",
+        # "duration",
+        "depends",
+    ]
+    df = df[selection]
+
+    def rename_columns(df):
+        def transform(columns):
+            def clean(name):
+                name = name.replace("count", "")
+                name = name.replace("_", " ")
+                name = name.strip()
+                name = name.capitalize()
+
+                return name
+
+            new_columns = map(clean, columns)
+            return dict(zip(columns, new_columns))
+
+        return df.rename(columns=transform(list(df.columns)))
+
+    df = rename_columns(df)
+    results = df.to_dict(orient="list")
+
+    print(tabulate(results, headers="keys"))
 
 
 @click.command()
@@ -61,5 +146,5 @@ config.add_command(set)
 config.add_command(get)
 
 cli.add_command(config)
-cli.add_command(parse)
+cli.add_command(stats)
 cli.add_command(skeleton)

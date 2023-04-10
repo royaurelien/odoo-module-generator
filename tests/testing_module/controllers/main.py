@@ -7,3 +7,5 @@ from odoo.addons.base.controllers.rpc import RPC
 
 class TestRPC(RPC):
     print(rpc)
+
+    glob = []
