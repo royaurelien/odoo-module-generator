@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import os
-from unittest import mock
 
 from omg.core.parser import Parser
 

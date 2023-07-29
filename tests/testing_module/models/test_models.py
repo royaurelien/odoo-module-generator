@@ -39,8 +39,8 @@ class ResUsers(models.Model):
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    def testing(self, async, k=100):
-        print(async)
+    def testing(self, abc, k=100):
+        print(abc)
         print(RPC, k)
 
     k = int()
@@ -49,8 +49,10 @@ class ResPartner(models.Model):
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
-    new_selection = fields.Selection([('item1', 'Item 1'), ('item2', 'Item 2')])
-    new_o2m = fields.One2many("product.product", inverse_name="product_id", string="New O2M")
+    new_selection = fields.Selection([("item1", "Item 1"), ("item2", "Item 2")])
+    new_o2m = fields.One2many(
+        "product.product", inverse_name="product_id", string="New O2M"
+    )
 
 
 class ResPartnerB(models.Model):

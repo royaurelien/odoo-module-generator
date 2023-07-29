@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import click
-from tabulate import tabulate
-import pandas as pd
 import numpy as np
+import pandas as pd
+from tabulate import tabulate
 
 from omg.core.config import Config
-from omg.core.parser import Parser
 from omg.core.git import git_revert
-from omg.core.xml import parse_xml_from_path, generate_model
+from omg.core.parser import Parser
+from omg.core.xml import generate_model, parse_xml_from_path
 
 settings = Config()
 

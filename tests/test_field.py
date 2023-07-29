@@ -1,8 +1,4 @@
-import ast
-from unittest import mock
 import logging
-
-from black import format_str, FileMode
 
 from omg.odoo import Model
 

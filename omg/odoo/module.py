@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import ast
-import os
 import logging
-from collections import namedtuple
 
-
+from omg.core.models import File
+from omg.core.tools import generate
 from omg.odoo import OdooModule
 from omg.odoo.model import Model
-from omg.core.tools import generate
-from omg.core.models import File
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 

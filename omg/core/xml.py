@@ -1,15 +1,13 @@
+import os
 import xml.etree.ElementTree as ET
-from pprint import pprint
 
 from omg.core.tools import generate
-
-import os
 
 
 def extract(item):
     vals = item.attrib
 
-    if not "name" in vals:
+    if "name" not in vals:
         # print(item.text)
         return (False, False)
     key = vals.pop("name")

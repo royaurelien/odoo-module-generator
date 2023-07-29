@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import os
-from unittest import mock
 
 from omg.odoo import Module
 
@@ -22,17 +20,15 @@ def test_models():
     module = get_module()
     models = module.models
 
-    names = set(
-        [
-            "test.wizard",
-            "test.wizard.line",
-            "test.abstract",
-            "test.model",
-            "res.users",
-            "res.partner",
-            "product.template",
-        ]
-    )
+    names = {
+        "test.wizard",
+        "test.wizard.line",
+        "test.abstract",
+        "test.model",
+        "res.users",
+        "res.partner",
+        "product.template",
+    }
 
     assert set(models.keys()) == names
 
@@ -41,6 +37,9 @@ def test_models():
     assert models["test.model"].ttype == "Model"
     assert models["res.users"].ttype == "Model"
 
-    assert set(filter(lambda x: models[x].is_stored, models.keys())) == set(
-        ["test.model", "res.users", "res.partner", "product.template"]
-    )
+    assert set(filter(lambda x: models[x].is_stored, models.keys())) == {
+        "test.model",
+        "res.users",
+        "res.partner",
+        "product.template",
+    }

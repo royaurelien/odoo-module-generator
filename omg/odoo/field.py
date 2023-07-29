@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import logging
 
-from omg.odoo import OdooField
 from omg.core.tools import dict_to_list
+from omg.odoo import OdooField
 
 _logger = logging.getLogger(__name__)
 

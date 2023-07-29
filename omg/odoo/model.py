@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import ast
-from collections import namedtuple
 import logging
 
+from omg.core.models import File
+from omg.core.tools import generate, get_arg, get_assign, get_keyword
 from omg.odoo import OdooModel, get_ast_source_segment
 from omg.odoo.field import Field
-from omg.core.tools import generate, get_arg, get_keyword, get_assign
-from omg.core.models import File
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]

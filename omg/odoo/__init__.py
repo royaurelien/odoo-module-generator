@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import logging
@@ -46,7 +45,7 @@ class Odoo(OOdoo):
             vals = self.modules[name].to_json()
             data[name].update(vals)
 
-            x = data[name].setdefault("missing_dependency", {})
+            data[name].setdefault("missing_dependency", {})
             # data[name]["missing_dependency"] = x
 
         return data

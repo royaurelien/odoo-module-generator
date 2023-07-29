@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
-from collections import namedtuple
-from datetime import datetime
-import logging
 import json
 import os
-import requests
-import time
+from collections import namedtuple
 from pathlib import Path
 
 Options = namedtuple("Options", ["url", "authenable", "authmethod"])
@@ -25,7 +20,7 @@ def get_config_filepath():
 
 
 def read_from_json(path):
-    with open(path, "r") as file:
+    with open(path) as file:
         data = json.loads(file.read())
 
     return data
@@ -36,7 +31,7 @@ def save_to_json(path, data):
         file.write(json.dumps(data))
 
 
-class Config(object):
+class Config:
     options: Options = None
 
     def __init__(self, **kwargs):

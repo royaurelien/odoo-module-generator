@@ -1,16 +1,13 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
-import json
 
 message = """
 Please install git package first.
 """
 
 try:
-    from sh import git
-    from sh import ErrorReturnCode_128
-except ImportError as error:
+    from sh import ErrorReturnCode_128, git
+except ImportError:
     print(message)
     exit(1)
 
@@ -19,6 +16,8 @@ def git_init(path):
     res = git(["init", "--quiet"], _cwd=path)
     res = git(["add", "-A"], _cwd=path)
     res = git(["commit", "-m", "Initial commit"], _cwd=path)
+
+    return res
 
 
 def git_branch(path):
@@ -41,6 +40,8 @@ def git_checkout(path, name):
         res = git(["checkout", "-b", name], _cwd=path)
     except ErrorReturnCode_128:
         res = git(["checkout", name], _cwd=path)
+
+    return res
 
 
 def git_revert(path):

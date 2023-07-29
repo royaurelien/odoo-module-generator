@@ -1,20 +1,13 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
 import ast
-import os
 import logging
-import sys
-import tempfile
-from functools import partial
+import os
 from collections import namedtuple
-import subprocess
 
-from black import format_str, FileMode
-from black.parsing import InvalidInput
 import jinja2
+from black.parsing import InvalidInput
 from jinja2.exceptions import UndefinedError
-
 
 _logger = logging.getLogger(__name__)
 

@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
-import os
-import logging
-import shutil
-from io import StringIO
-import sys
 import json
+import logging
+import os
+import shutil
+import sys
+from io import StringIO
 
-
-from omg.odoo import Odoo
 from omg.core.git import git_branch, git_checkout
+from omg.odoo import Odoo
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 
@@ -18,7 +16,7 @@ MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 _logger = logging.getLogger(__name__)
 
 
-class Parser(object):
+class Parser:
     def __init__(self, path):
         self.path = path
         self.modules = {}
