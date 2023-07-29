@@ -38,7 +38,7 @@ def generate_code(template: str, data: dict, functions=None) -> str:
 
     try:
         code = jinja_template.render(**data)
-        code = format_str(code, mode=FileMode())
+        # code = format_str(code, mode=FileMode())
     except UndefinedError as error:
         _logger.error(error)
         code = False

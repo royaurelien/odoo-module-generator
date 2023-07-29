@@ -9,6 +9,7 @@ import numpy as np
 from omg.core.config import Config
 from omg.core.parser import Parser
 from omg.core.git import git_revert
+from omg.core.xml import parse_xml_from_path, generate_model
 
 settings = Config()
 
@@ -30,6 +31,17 @@ def extract(items):
             line = item
         res.append(line)
     return res
+
+
+@click.command()
+@click.argument("path")
+@click.argument("output")
+def xml_to_fields(path, output, **kwargs):
+    res = parse_xml_from_path(path)
+    for model, fields in res.items():
+        file = generate_model(output, model, fields)
+        with open(file.path, "w") as f:
+            f.write(file.content)
 
 
 @click.command()
@@ -147,4 +159,5 @@ config.add_command(get)
 
 cli.add_command(config)
 cli.add_command(stats)
+cli.add_command(xml_to_fields)
 cli.add_command(skeleton)
