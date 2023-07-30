@@ -1,0 +1,9 @@
+from odoo import http
+from odoo.http import request
+
+
+class CustomController(http.Controller):
+    @http.route(["/custom/<string:document>"], type="http", auth="public", website=True)
+    def custom(self, document, **kwargs):
+        values = {}
+        return request.render("custom.index", values)

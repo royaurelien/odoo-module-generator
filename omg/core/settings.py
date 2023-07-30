@@ -8,18 +8,13 @@ from pydantic import ValidationError
 from pydantic_settings import BaseSettings
 
 from omg.common.logger import _logger
-from omg.common.path import path
+from omg.common.path import apppath
 from omg.common.tools import DEFAULT_ENCODING, save_to
-
-# from typing import Generic, List, Optional, TypeVar
 
 
 class Settings(BaseSettings):
     __MANDATORY_VALUES__ = []
     __prompt__ = True
-
-    # var_1: str
-    # var_2: str
 
     log_level: str = ""
     odoo_repo_tmpl_name: str = "royaurelien/odoo-repository-template"
@@ -40,7 +35,7 @@ class Settings(BaseSettings):
     @property
     def ask_to_user(self):
         """Ask to user."""
-        return self.__prompt__
+        return bool(self.__prompt__)
 
     @property
     def is_ready(self):
@@ -92,13 +87,13 @@ class Settings(BaseSettings):
     def load_from_json(cls):
         """Load settings from JSON file"""
 
-        _logger.debug("Root dir: %s", path.root_dir)
-        _logger.debug("Load settings from '%s'.", path.config_filepath)
+        _logger.debug("Root dir: %s", apppath.root_dir)
+        _logger.debug("Load settings from '%s'.", apppath.config_filepath)
 
-        if not os.path.exists(path.config_filepath):
+        if not os.path.exists(apppath.config_filepath):
             return cls.new_file()
 
-        with open(path.config_filepath, encoding=DEFAULT_ENCODING) as file:
+        with open(apppath.config_filepath, encoding=DEFAULT_ENCODING) as file:
             data = file.read()
 
         if not data:
@@ -116,10 +111,6 @@ class Settings(BaseSettings):
                         data.pop(key)
                 self = cls.parse_raw(data)
 
-        # check logging level
-        # if self.log_level and self.log_level != get_log_level():
-        #     set_log_level(self.log_level)
-
         self.save()
         _logger.debug("Missing values: %s", self._get_missing_values())
         return self
@@ -130,7 +121,7 @@ class Settings(BaseSettings):
         data = self.json()
         _logger.debug(data)
 
-        filepath = path.config_filepath
+        filepath = apppath.config_filepath
 
         if clear and os.path.exists(filepath):
             os.remove(filepath)

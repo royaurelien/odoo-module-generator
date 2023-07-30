@@ -22,19 +22,21 @@ class Path(metaclass=SingletonMeta):
     @property
     def root_dir(self):
         """Root directory."""
-
         return os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 
     @property
     def static_dir(self):
+        """Static directory."""
         return os.path.join(self.root_dir, "static")
 
     @property
     def template_dir(self):
+        """Templates directory."""
         return os.path.join(self.root_dir, "static/templates")
 
     @property
     def images_dir(self):
+        """Images directory."""
         return os.path.join(self.root_dir, "static/img")
 
     @property
@@ -54,4 +56,4 @@ class Path(metaclass=SingletonMeta):
         _logger.debug("Config dir: %s", self.config_dir)
 
 
-path = Path(APP_NAME, AUTHOR, CONFIG_FILENAME)
+apppath = Path(APP_NAME, AUTHOR, CONFIG_FILENAME)

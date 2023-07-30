@@ -3,8 +3,6 @@ import sys
 import click
 
 from omg.common.exceptions import ExternalCommandFailed
-from omg.common.logger import _logger
-from omg.common.render import generate_manifest
 from omg.core.scaffold import RepositoryTemplate, ScaffoldModule
 from omg.core.settings import get_settings
 
@@ -14,7 +12,7 @@ settings = get_settings()  # pylint: disable=C0413
 @click.command()
 @click.argument("path")
 def repo(path):
-    """Command 1."""
+    """Update repository."""
 
     scaffold = RepositoryTemplate.load()
     scaffold.extract_to(path)
@@ -29,15 +27,10 @@ def repo(path):
 @click.command()
 @click.argument("path")
 def module(path):
-    """Command 1."""
+    """Generate module."""
 
     scaffold = ScaffoldModule(path)
     scaffold.user_prompt()
-    manifest = scaffold.get_manifest()
+    scaffold.complete_manifest()
 
-    _logger.debug(manifest.model_dump())
-
-    print(manifest.model_dump())
-
-    scaffold.create_dirs()
-    generate_manifest(manifest.dict(), scaffold.module_path)
+    scaffold.generate()

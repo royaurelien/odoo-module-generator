@@ -19,16 +19,27 @@ MANIFEST_FILENAME = "__manifest__.py"
 
 
 def format_code(data):
+    """Apply Black formatting on code."""
     data = str(data)
 
     return black.format_str(data, mode=black.Mode())
 
 
-def save_to(data, filepath):
+def save_to(content, filepath, **kwargs):
     """Save content to filepath."""
 
+    code = bool(kwargs.get("code", False))
+    delete = bool(kwargs.get("code", False))
+
+    if code:
+        content = format_code(content)
+
+    if delete:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
     with open(filepath, "w+", encoding=DEFAULT_ENCODING) as file:
-        file.write(data)
+        file.write(content)
 
 
 def abort_if_false(ctx, _, value):
@@ -161,8 +172,6 @@ def download_to_tempfile(url, raise_if_error=False, **kwargs):
             raise DownloadError("n/c", url, code) from error
         return False
 
-    # _logger.warning(response.content)
-
     with tempfile.NamedTemporaryFile("wb", delete=False) as tmp:
         zipfile = tmp.name
         tmp.write(response.content)
@@ -206,12 +215,55 @@ def get_github_archive(repository, branch="master"):
 
 
 def dot_name_to_camel_case(content):
+    """Convert dot name to camel case.
+
+    eg: res.partner => ResPartner
+    """
     return "".join(map(str.capitalize, content.split(".")))
 
 
 def dot_name_to_human(content):
+    """Convert dot name to Human readable format.
+
+    eg: res.partner => Res Partner
+    """
     return " ".join(map(str.capitalize, content.split(".")))
 
 
-def slugify(content):
+def dot_name_to_snake_case(content):
+    """Convert dot name to snake case.
+
+    eg: res.partner => res_partner
+    """
     return "_".join(content.split("."))
+
+
+def filter_by_extensions(items, extensions):
+    """Filter items by files extensions."""
+    return list(filter(lambda item: item.split(".")[-1] in extensions, items))
+
+
+def get_filenames(items):
+    """Split filenames and return it w/o extension."""
+    return list(map(lambda item: item.split(".")[0], items))
+
+
+def get_python_filenames(items):
+    """Return Python filenames only."""
+    return get_filenames(filter_by_extensions(items, ["py"]))
+
+
+def get_xml_files(items):
+    """Return XML files only."""
+    return filter_by_extensions(items, ["xml"])
+
+
+def create_dirs(root, directories):
+    """Create directories."""
+    for name in directories:
+        os.makedirs(os.path.join(root, name), exist_ok=True)
+
+
+def convert_string_to_human_readable(string):
+    """Convert string to most Human readable format."""
+    return string.replace("_", " ").capitalize()

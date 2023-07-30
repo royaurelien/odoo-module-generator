@@ -39,16 +39,22 @@ class Manifest(BaseModel):
     application: str = False
     license: str = settings.default_license
 
+    def add_items(self, key, value):
+        """Add items to list fields."""
+
+        attr = getattr(self, key)
+        attr += value
+
 
 class IrModelAccessLine(BaseModel):
     id: str
     name: str
     model_id: str
     group_id: str
-    perm_read: bool = True
-    perm_write: bool = True
-    perm_create: bool = True
-    perm_unlink: bool = True
+    perm_read: int = 1
+    perm_write: int = 1
+    perm_create: int = 1
+    perm_unlink: int = 1
 
 
 class IrModelAccess(BaseModel):
@@ -65,34 +71,6 @@ class IrModelAccess(BaseModel):
 
     path: str = ""
     lines: List[IrModelAccessLine] = []
-
-    def add_line(
-        self,
-        model,
-        group,
-        perm_read=True,
-        perm_write=True,
-        perm_create=True,
-        perm_unlink=True,
-    ):
-        slugified_model = model.replace(".", "_")
-        name = f"access_{slugified_model}"
-        vals = {
-            "id": name,
-            "name": name,
-            "model_id": f"model_{slugified_model}",
-            "group_id": group,
-            "perm_read": perm_read,
-            "perm_write": perm_write,
-            "perm_create": perm_create,
-            "perm_unlink": perm_unlink,
-        }
-        line = IrModelAccessLine(**vals)
-        self.lines.append(line)
-
-    def add_lines(self, lines):
-        for line in lines:
-            self.add_line(**line)
 
 
 class Field(BaseModel):
