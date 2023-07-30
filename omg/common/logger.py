@@ -51,9 +51,17 @@ def logs(function):
         output = function(*args, **kwargs)
 
         end = time.perf_counter()
-        message = f"{function.__qualname__}: end ({end - start:.6f})"
-        logger.debug(message)
+        message = f"{function.__qualname__}: end ({end - start:.6f})"  # noqa: F841
+        # logger.debug(message)
 
         return output
 
     return wrapper
+
+
+def set_log_level(level):
+    logging.getLogger().setLevel(level)
+
+
+def get_log_level():
+    return logging.getLogger()

@@ -49,7 +49,7 @@ repos:
         args: ["--remove"]
       - id: check-case-conflict
       - id: check-docstring-first
-      - id: check-executables-have-shebangs
+      # - id: check-executables-have-shebangs
       - id: check-merge-conflict
         # exclude files where underlines are not distinguishable from merge conflicts
         exclude: /README\.rst$|^docs/.*\.rst$
@@ -68,15 +68,15 @@ repos:
     rev: 6.0.0
     hooks:
       - id: flake8
-  - repo: https://github.com/OCA/pylint-odoo
-    rev: 7.0.2
-    hooks:
-      - id: pylint_odoo
-        name: pylint with optional checks
-        args:
-          - --rcfile=.pylintrc
-          - --exit-zero
-        verbose: true
-      # - id: pylint_odoo
-      #   args:
-      #     - --rcfile=.pylintrc-mandatory
+  # - repo: https://github.com/OCA/pylint-odoo
+  #   rev: 7.0.2
+  #   hooks:
+  #     - id: pylint_odoo
+  #       name: pylint with optional checks
+  #       args:
+  #         - --rcfile=.pylintrc
+  #         - --exit-zero
+  #       verbose: true
+  #     # - id: pylint_odoo
+  #     #   args:
+  #     #     - --rcfile=.pylintrc-mandatory

@@ -1,0 +1,86 @@
+<odoo>
+  <data>
+
+    <!-- SEARCH VIEW -->
+    <record id="view_new_model_search" model="ir.ui.view">
+      <field name="name">new.model.search</field>
+      <field name="model">new.model</field>
+      <field name="arch" type="xml">
+        <search>
+          <field name="name"/>
+          <field name="country_id" />
+          <separator/>
+          <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+          <separator/>
+          <group expand="0" name="group_by" string="Group By">
+            <filter name="group_country" string="Country" context="{'group_by': 'country_id'}"/>
+          </group>
+        </search>
+      </field>
+    </record>
+
+    <!-- TREE VIEW -->
+    <record id="view_new_model_tree" model="ir.ui.view">
+      <field name="name">new.model.tree</field>
+      <field name="model">new.model</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name"/>
+          <field name="country_id" optional="show"/>
+          <field name="partner_count" optional="show"/>
+          <field name="create_date" widget="datetime" optional="hide"/>
+          <field name="create_uid" widget="many2one_avatar" optional="hide"/>
+        </tree>
+      </field>
+    </record>
+
+    <!-- FORM VIEW -->
+    <record id="view_new_model_form" model="ir.ui.view">
+      <field name="name">new.model.form</field>
+      <field name="model">new.model</field>
+      <field name="arch" type="xml">
+        <form>
+          <!-- <field name="custom_field" invisible="1"/> -->
+          <header>
+            <button name="action_custom_wizard" type="object" icon="fa-external-link" string="Custom Wizard"/>
+          </header>
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+                <button class="oe_stat_button" type="object" name="action_view_partners" icon="fa-usd">
+                    <field string="Partners" name="partner_count" widget="statinfo"/>
+                </button>
+            </div>
+            <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+            <div class="oe_title mb24">
+                <field name="active" invisible="1"/>
+                <h1>
+                    <field id="name" class="text-break" name="name" required="1" default_focus="1" placeholder="e.g. Name"/>
+                </h1>
+            </div>
+            <group>
+              <group>
+                <field name="country_id"/>
+              </group>
+              <group>
+                <field name="create_date"/>
+                <field name="create_uid" widget="many2one_avatar"/>
+              </group>
+            </group>
+            <notebook>
+              <page string="Informations" groups="base.group_no_one">
+                <field name="description"/>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="action_view_new_model" model="ir.actions.act_window">
+      <field name="name">New Model</field>
+      <field name="res_model">new.model</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+  </data>
+</odoo>

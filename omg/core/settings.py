@@ -11,6 +11,8 @@ from omg.common.logger import _logger
 from omg.common.path import path
 from omg.common.tools import DEFAULT_ENCODING, save_to
 
+# from typing import Generic, List, Optional, TypeVar
+
 
 class Settings(BaseSettings):
     __MANDATORY_VALUES__ = []
@@ -18,11 +20,22 @@ class Settings(BaseSettings):
 
     # var_1: str
     # var_2: str
-    # odoo_repository_url: str = (
-    #     "https://github.com/royaurelien/odoo-repository-template.git"
-    # )
 
-    odoo_repository_url: str = "https://github.com/royaurelien/odoo-repository-template/archive/refs/heads/master.tar.gz"
+    log_level: str = ""
+    odoo_repo_tmpl_name: str = "royaurelien/odoo-repository-template"
+    odoo_repo_tmpl_branch: str = "master"
+    odoo_repo_tmpl_commands: list = [
+        "pre-commit install",
+        "pre-commit run --all-files",
+    ]
+
+    default_author: str = "Aurelien ROY"
+    default_website: str = "https://github.com/royaurelien"
+    default_mainteners: list = ["Aurelien ROY"]
+    default_category: str = "Technical"
+    default_license: str = "LGPL-3"
+
+    logo_filepath: str = ""
 
     @property
     def ask_to_user(self):
@@ -102,6 +115,10 @@ class Settings(BaseSettings):
                     if key in data:
                         data.pop(key)
                 self = cls.parse_raw(data)
+
+        # check logging level
+        # if self.log_level and self.log_level != get_log_level():
+        #     set_log_level(self.log_level)
 
         self.save()
         _logger.debug("Missing values: %s", self._get_missing_values())

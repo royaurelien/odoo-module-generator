@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="partner_filand_1" model="res.partner">
+        <field name="name">Matias Lintula</field>
+        <field name="phone">044 588 1622</field>
+        <field name="email">matiaslintula@teleworm.us</field>
+        <field name="street">Hirvenpolku 5</field>
+        <field name="zip">66400</field>
+        <field name="city">LAIHIA</field>
+        <field name="country_id" ref="base.fi"/>
+        <field name="company_type">person</field>
+        <field name="is_gold" eval="True"/>
+    </record>
+
+</odoo>

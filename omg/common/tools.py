@@ -6,14 +6,22 @@ import subprocess
 import tarfile
 import tempfile
 
+import black
 import requests
 from requests.exceptions import HTTPError
 
 from omg.common.exceptions import DownloadError
-from omg.common.logger import _logger
+from omg.common.logger import _logger, logs
 
 DEFAULT_ENCODING = "utf8"
 DEFAULT_TIMEOUT = 60
+MANIFEST_FILENAME = "__manifest__.py"
+
+
+def format_code(data):
+    data = str(data)
+
+    return black.format_str(data, mode=black.Mode())
 
 
 def save_to(data, filepath):
@@ -30,6 +38,7 @@ def abort_if_false(ctx, _, value):
         ctx.abort()
 
 
+@logs
 def run_external_command(cmd, **kwargs):
     """Run system command and return result."""
 
@@ -186,3 +195,25 @@ def extract_to(filepath, destination, exclude=[]):  # pylint: disable=W0102
             archive.extractall(path, members=members)
 
         shutil.copytree(os.path.join(path, dir_name), destination, dirs_exist_ok=True)
+
+
+def get_github_archive(repository, branch="master"):
+    """Get archive from Github repository."""
+
+    url = f"https://github.com/{repository}/archive/refs/heads/{branch}.tar.gz"
+    _logger.debug(url)
+    return url
+
+
+def generate_manifest(content: dict, path: str) -> bool:
+    content = format_code(content)
+
+    filepath = os.path.join(path, MANIFEST_FILENAME)
+
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+    with open(filepath, "w+", encoding=DEFAULT_ENCODING) as file:
+        file.write(content)
+
+    return True

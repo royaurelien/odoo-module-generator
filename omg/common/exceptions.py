@@ -27,3 +27,12 @@ class DownloadError(Exception):
             f"Error while trying to download {filename} from {url} (HTTP {http_code})."
         )
         super().__init__(self.message)
+
+
+class ExternalCommandFailed(Exception):
+    """Exception raised for external command failed."""
+
+    def __init__(self, name):
+        self.name = name
+        self.message = f"Command {name} failed."
+        super().__init__(self.message)

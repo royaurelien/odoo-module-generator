@@ -6,9 +6,8 @@ from omg.core.settings import get_settings
 
 settings = get_settings()  # pylint: disable=C0413
 
-from cli.repository import repository  # noqa: E402
-
 import omg.cli.group_1 as gp1  # noqa: E402
+from omg.cli.scaffold import module, repo  # noqa: E402
 
 if not settings.is_ready and settings.ask_to_user:
     click.echo("Please fill configuration to continue :")
@@ -31,9 +30,11 @@ cli.add_command(group_1)
 
 
 @click.group()
-def repo():
+def scaffold():
     """Manage repository"""
 
 
-repo.add_command(repository.install)
-cli.add_command(repo)
+scaffold.add_command(repo)
+scaffold.add_command(module)
+
+cli.add_command(scaffold)

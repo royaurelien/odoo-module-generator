@@ -1,0 +1,42 @@
+<odoo>
+  <data>
+
+    <!-- INHERITED SEARCH VIEW -->
+    <record id="view_res_partner_filter" model="ir.ui.view">
+      <field name="name">res.partner.select.inherit</field>
+      <field name="model">res.partner</field>
+      <field name="inherit_id" ref="base.view_res_partner_filter"/>
+      <field name="arch" type="xml">
+        <xpath expr="//filter[@name='inactive']" position="after">
+          <separator/>
+          <filter name="is_gold" string="Gold Partner" domain="[('is_gold', '=', True)]"/>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- INHERITED TREE VIEW -->
+    <record id="view_partner_tree" model="ir.ui.view">
+      <field name="name">res.partner.tree.inherited</field>
+      <field name="model">res.partner</field>
+      <field name="inherit_id" ref="base.view_partner_tree"/>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='is_company']" position="before">
+          <field name="is_gold" string="Gold Partner" optional="show"/>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- INHERITED FORM VIEW -->
+    <record id="view_partner_form" model="ir.ui.view">
+      <field name="name">res.partner.form.inherited</field>
+      <field name="model">res.partner</field>
+      <field name="inherit_id" ref="base.view_partner_form"/>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='ref']" position="after">
+          <field string="Gold Partner" name="is_gold" widget="boolean_toggle"/>
+        </xpath>
+      </field>
+    </record>
+
+  </data>
+</odoo>

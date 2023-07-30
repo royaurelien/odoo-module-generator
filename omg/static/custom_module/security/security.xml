@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="custom_module.module_category_custom" model="ir.module.category">
+            <field name="name">Custom</field>
+            <field name="description">Custom Category</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="custom_module.group_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="custom_module.module_category_custom"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="custom_module.group_advanced" model="res.groups">
+            <field name="name">Advanced User</field>
+            <field name="category_id" ref="custom_module.module_category_custom"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="custom_module.group_manager" model="res.groups">
+            <field name="name">Manager</field>
+            <field name="category_id" ref="custom_module.module_category_custom"/>
+            <field name="implied_ids" eval="[(4, ref('custom_module.group_user')), (4, ref('custom_module.group_advanced'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+    </data>
+</odoo>

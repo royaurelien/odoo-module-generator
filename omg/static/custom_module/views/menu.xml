@@ -1,0 +1,18 @@
+<odoo>
+    <data>
+
+        <menuitem
+            id="new_model_menu_root"
+            name="New App"
+            web_icon="fa fa-bug,#FFFFFF,#714b67"
+            groups="custom_module.group_user"
+            sequence="99"/>
+
+
+        <menuitem id="new_model_menu" name="New Model" parent="new_model_menu_root" sequence="10" action="action_view_new_model"/>
+
+        <menuitem id="new_app_menu" name="New App" parent="contacts.res_partner_menu_config" sequence="99"/>
+        <menuitem id="new_model_contacts" name="New Model" parent="new_app_menu" sequence="99" action="action_view_new_model"/>
+
+    </data>
+</odoo>

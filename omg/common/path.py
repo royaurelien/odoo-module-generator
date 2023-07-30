@@ -26,6 +26,14 @@ class Path(metaclass=SingletonMeta):
         return os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 
     @property
+    def static_dir(self):
+        return os.path.join(self.root_dir, "static")
+
+    @property
+    def images_dir(self):
+        return os.path.join(self.root_dir, "static/img")
+
+    @property
     def config_dir(self):
         """Configuration directory."""
 
