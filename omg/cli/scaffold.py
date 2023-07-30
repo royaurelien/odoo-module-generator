@@ -4,7 +4,7 @@ import click
 
 from omg.common.exceptions import ExternalCommandFailed
 from omg.common.logger import _logger
-from omg.common.tools import generate_manifest
+from omg.common.render import generate_manifest
 from omg.core.scaffold import RepositoryTemplate, ScaffoldModule
 from omg.core.settings import get_settings
 

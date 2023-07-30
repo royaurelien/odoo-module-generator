@@ -30,6 +30,10 @@ class Path(metaclass=SingletonMeta):
         return os.path.join(self.root_dir, "static")
 
     @property
+    def template_dir(self):
+        return os.path.join(self.root_dir, "static/templates")
+
+    @property
     def images_dir(self):
         return os.path.join(self.root_dir, "static/img")
 

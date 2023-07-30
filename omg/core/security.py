@@ -11,7 +11,9 @@ class Security:
         self.ir_model_access = None
 
     def new_model_access(self, lines):
-        self.ir_model_access = IrModelAccess(lines=lines)
+        # self.ir_model_access = IrModelAccess(lines=lines)
+        self.ir_model_access = IrModelAccess()
+        self.ir_model_access.add_lines(lines)
 
     def generate_ir_model_access(self, path):
         filepath = os.path.join(path, "security", IR_MODEL_ACCESS_FILENAME)

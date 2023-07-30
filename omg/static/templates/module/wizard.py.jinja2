@@ -1,0 +1,22 @@
+from odoo import fields, models
+
+
+class {{ class_name }}(models.TransientModel):
+    _name = "{{ model_name }}"
+    _description = "{{ model_description }}"
+
+    {{ related_model_slugified }}_id = fields.Many2one(
+        comodel_name="{{ related_model_name }}",
+        required=True,
+    )
+    partner_ids = fields.One2many(
+        comodel_name="res.partner",
+        related="{{ related_model_slugified }}_id.partner_ids",
+    )
+    partner_count = fields.Integer(
+        related="{{ related_model_slugified }}_id.partner_count",
+    )
+    is_checked = fields.Boolean(default=False)
+
+    def validate(self):
+        return True

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="partner_finland_1" model="res.partner">
+        <field name="name">Matias Lintula</field>
+        <field name="phone">044 588 1622</field>
+        <field name="email">matiaslintula@teleworm.us</field>
+        <field name="street">Hirvenpolku 5</field>
+        <field name="zip">66400</field>
+        <field name="city">LAIHIA</field>
+        <field name="country_id" ref="base.fi"/>
+        <field name="company_type">person</field>
+        <field name="is_gold" eval="True"/>
+    </record>
+
+    <record id="{{ model_slugified }}_1" model="{{ model_name }}">
+        <field name="name">Test 1: US Country</field>
+        <field name="description">This is a test.</field>
+        <field name="country_id" ref="base.us"/>
+    </record>
+
+    <record id="{{ model_slugified }}_2" model="{{ model_name }}">
+        <field name="name">Test 2: French</field>
+        <field name="description"></field>
+        <field name="country_id" ref="base.fr"/>
+    </record>
+
+    <record id="{{ model_slugified }}_3" model="{{ model_name }}">
+        <field name="name">Test 3: Finland</field>
+        <field name="description"></field>
+        <field name="country_id" ref="base.fi"/>
+    </record>
+
+</odoo>

@@ -4,6 +4,7 @@ import shutil
 from omg.common.exceptions import ExternalCommandFailed
 from omg.common.logger import _logger
 from omg.common.path import path
+from omg.common.render import Helper
 from omg.common.tools import (
     download_to_tempfile,
     extract_to,
@@ -152,29 +153,67 @@ class ScaffoldModule(Scaffold):
 
         shutil.copyfile(src, dest)
 
+        # model_access = [
+        #     {
+        #         "id": "access_new_model",
+        #         "name": "access_new_model",
+        #         "model_id": "model_new_model",
+        #         "group_id": "custom_module.group_user",
+        #         "perm_read": True,
+        #         "perm_write": True,
+        #         "perm_create": True,
+        #         "perm_unlink": False,
+        #     },
+        #     {
+        #         "id": "access_new_model_manager",
+        #         "name": "access_new_model_manager",
+        #         "model_id": "model_new_model",
+        #         "group_id": "custom_module.group_manager",
+        #         "perm_read": True,
+        #         "perm_write": True,
+        #         "perm_create": True,
+        #         "perm_unlink": True,
+        #     },
+        # ]
+
         model_access = [
             {
-                "id": "access_new_model",
-                "name": "access_new_model",
-                "model_id": "model_new_model",
-                "group_id": "custom_module.group_user",
-                "perm_read": True,
-                "perm_write": True,
-                "perm_create": True,
-                "perm_unlink": False,
-            },
-            {
-                "id": "access_new_model_manager",
-                "name": "access_new_model_manager",
-                "model_id": "model_new_model",
-                "group_id": "custom_module.group_manager",
-                "perm_read": True,
-                "perm_write": True,
-                "perm_create": True,
-                "perm_unlink": True,
+                "model": "new.model",
+                "group": "custom_module.group_user",
             },
         ]
 
         security = Security()
         security.new_model_access(model_access)
+
         security.generate_ir_model_access(root)
+
+        # res.partner
+
+        helper = Helper(self.name, "res.partner", root)
+        helper.render_python("module/res_partner.py.jinja2", "models")
+        helper.render_xml("module/res_partner.xml.jinja2", "views")
+
+        # custom model
+
+        # helper = Helper(self.name, "cust.om", root)
+        helper.reset(self.name, "cust.om", root)
+        helper.render_python("module/new_model.py.jinja2", "models")
+        helper.render_xml("module/new_model.xml.jinja2", "views")
+        helper.render_xml("module/menu.xml.jinja2", "views", "menu.xml")
+        helper.render_xml("module/demo.xml.jinja2", "demo", "demo.xml")
+
+        # custom wizard
+
+        ctx = {
+            "related_model_name": helper.model_name,
+            "related_model_slugified": helper.model_slugified,
+        }
+
+        # helper = Helper(self.name, "custom.wizard", root)
+
+        helper.reset(self.name, "custom.wizard", root)
+        helper.render_python("module/wizard.py.jinja2", "wizard", ctx=ctx)
+        helper.render_xml("module/wizard.xml.jinja2", "wizard", ctx=ctx)
+
+        _logger.error(helper._files)

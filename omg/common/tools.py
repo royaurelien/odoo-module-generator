@@ -205,15 +205,13 @@ def get_github_archive(repository, branch="master"):
     return url
 
 
-def generate_manifest(content: dict, path: str) -> bool:
-    content = format_code(content)
+def dot_name_to_camel_case(content):
+    return "".join(map(str.capitalize, content.split(".")))
 
-    filepath = os.path.join(path, MANIFEST_FILENAME)
 
-    if os.path.exists(filepath):
-        os.remove(filepath)
+def dot_name_to_human(content):
+    return " ".join(map(str.capitalize, content.split(".")))
 
-    with open(filepath, "w+", encoding=DEFAULT_ENCODING) as file:
-        file.write(content)
 
-    return True
+def slugify(content):
+    return "_".join(content.split("."))
