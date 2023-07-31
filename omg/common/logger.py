@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from functools import wraps
 from logging.config import dictConfig
@@ -11,8 +12,7 @@ class LogConfig(BaseModel):
 
     LOGGER_NAME: str = "app"
     LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
-    # LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = os.getenv("OMG_LOG_LEVEL", "ERROR")
 
     # Logging config
     version: int = 1
@@ -52,7 +52,7 @@ def logs(function):
 
         end = time.perf_counter()
         message = f"{function.__qualname__}: end ({end - start:.6f})"  # noqa: F841, pylint: disable=W0612
-        # logger.debug(message)
+        logger.debug(message)
 
         return output
 

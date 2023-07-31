@@ -6,6 +6,8 @@ from omg.core.settings import get_settings
 
 settings = get_settings()
 
+BaseModel.model_config["protected_namespaces"] = ()
+
 
 class Manifest(BaseModel):
     __prompt__ = [

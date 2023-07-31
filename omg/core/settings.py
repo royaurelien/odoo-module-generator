@@ -20,8 +20,10 @@ class Settings(BaseSettings):
     odoo_repo_tmpl_name: str = "royaurelien/odoo-repository-template"
     odoo_repo_tmpl_branch: str = "master"
     odoo_repo_tmpl_commands: list = [
+        "git add {}",
+        "git commit -m '[NEW]..OMG..:post_install_hook!'",
         "pre-commit install",
-        "pre-commit run --all-files",
+        # "pre-commit run --all-files",
     ]
 
     default_author: str = "Aurelien ROY"

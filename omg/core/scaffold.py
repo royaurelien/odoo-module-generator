@@ -2,6 +2,7 @@ import os
 import shutil
 
 from omg.common.exceptions import ExternalCommandFailed
+from omg.common.logger import _logger
 from omg.common.path import apppath
 from omg.common.render import (
     RIGHTS_FULL,
@@ -21,6 +22,7 @@ from omg.common.tools import (
     save_to,
 )
 from omg.core.models import Manifest
+from omg.core.repository import Repository
 from omg.core.settings import get_settings
 
 settings = get_settings()  # pylint: disable=C0413
@@ -64,7 +66,9 @@ class Scaffold:
         """Extract archive to path."""
 
         os.makedirs(path, exist_ok=True)
-        extract_to(self.source, path)
+        files = extract_to(self.source, path)
+
+        return files
 
 
 class RepositoryTemplate(Scaffold):
@@ -76,13 +80,25 @@ class RepositoryTemplate(Scaffold):
         )
         return cls.from_url(url)
 
-    def post_install_hook(self, path):  # pylint: disable=R0201
+    def post_install_hook(self, path, *args):  # pylint: disable=R0201
         """Execute post install hook."""
 
-        for cmd in settings.odoo_repo_tmpl_commands:
+        for i, cmd in enumerate(settings.odoo_repo_tmpl_commands, 1):
+            if "{}" in cmd and args:
+                cmd = cmd.format(*args)
+
+            _logger.debug(
+                "Run %s/%s: %s", i, len(settings.odoo_repo_tmpl_commands), cmd
+            )
+
             res = run_external_command(cmd, cwd=path)
             if not res:
                 raise ExternalCommandFailed(cmd)
+
+    def get_repository(self):
+        """Return Repository object from source path."""
+
+        return Repository(self.source)
 
 
 class ScaffoldModule(Scaffold):

@@ -3,6 +3,7 @@ import sys
 import click
 
 from omg.common.exceptions import ExternalCommandFailed
+from omg.core.repository import Repository
 from omg.core.scaffold import RepositoryTemplate, ScaffoldModule
 from omg.core.settings import get_settings
 
@@ -14,11 +15,14 @@ settings = get_settings()  # pylint: disable=C0413
 def repo(path):
     """Update repository."""
 
+    repository = Repository(path)
+
     scaffold = RepositoryTemplate.load()
-    scaffold.extract_to(path)
+    files = scaffold.extract_to(repository.path)
+    arg = " ".join(files)
 
     try:
-        scaffold.post_install_hook(path)
+        scaffold.post_install_hook(path, arg)
     except ExternalCommandFailed as error:
         click.echo(error)
         sys.exit(1)

@@ -18,6 +18,14 @@ DEFAULT_TIMEOUT = 60
 MANIFEST_FILENAME = "__manifest__.py"
 
 
+def get_absolute_path(path):
+    """Return absolute path."""
+    new_path = os.path.abspath(path)
+    _logger.debug("Absolute path: %s", new_path)
+
+    return new_path
+
+
 def format_code(data):
     """Apply Black formatting on code."""
     data = str(data)
@@ -70,6 +78,14 @@ def run_external_command(cmd, **kwargs):
     except subprocess.CalledProcessError as error:
         _logger.error(error)
         return False
+
+    if isinstance(res, bytes):
+        res = res.decode("utf8")
+
+    if isinstance(res, str) and len(res) == 0:
+        res = True
+
+    _logger.warning("Result: '%s'", res)
 
     return res
 
@@ -182,6 +198,7 @@ def download_to_tempfile(url, raise_if_error=False, **kwargs):
 def extract_to(filepath, destination, exclude=[]):  # pylint: disable=W0102
     """Extract zio or tar archive to destination."""
 
+    files = []
     with tempfile.TemporaryDirectory("wb") as path:
         _logger.debug("Tempdir: %s", path)
 
@@ -198,12 +215,17 @@ def extract_to(filepath, destination, exclude=[]):  # pylint: disable=W0102
                 )
             )
 
-            _logger.debug([os.path.basename(member.name) for member in members])
+            files = [os.path.basename(member.name) for member in members]
+            dir_name = files.pop(0)
+            # dir_name = archive.getmembers()[0].name
 
-            dir_name = archive.getmembers()[0].name
+            _logger.debug("files: %s", files)
+
             archive.extractall(path, members=members)
 
         shutil.copytree(os.path.join(path, dir_name), destination, dirs_exist_ok=True)
+
+    return files
 
 
 def get_github_archive(repository, branch="master"):
