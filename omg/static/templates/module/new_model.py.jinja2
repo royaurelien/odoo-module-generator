@@ -34,6 +34,7 @@ class {{ class_name }}(models.Model):
             record.partner_count = len(partners)
 
     def action_view_partners(self):
+        """View partners."""
         self.ensure_one()
 
         action = self.env.ref("contacts.action_contacts").read()[0]
@@ -49,6 +50,7 @@ class {{ class_name }}(models.Model):
         return action
 
     def action_custom_wizard(self):
+        """Open wizard."""
         self.ensure_one()
 
         view_id = self.env.ref("{{ module_name }}.custom_wizard_view_form").id

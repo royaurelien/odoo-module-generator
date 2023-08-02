@@ -1,3 +1,1 @@
-::: mkdocs-click
-    :module: app.cli.main
-    :command: cli
+::: mkdocs-click :module: app.cli.main :command: cli

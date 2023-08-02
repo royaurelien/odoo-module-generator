@@ -3,11 +3,11 @@ site_url: https://myapp.com/
 nav:
   - Home: index.md
   - Usage:
-    - CLI: cli.md
+      - CLI: cli.md
   - Advanced:
-    - Build: build.md
-    - Documentation: docs.md
+      - Build: build.md
+      - Documentation: docs.md
 
 markdown_extensions:
-    - mkdocs-click
+  - mkdocs-click
 theme: readthedocs

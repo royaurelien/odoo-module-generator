@@ -178,6 +178,7 @@ def download_to_tempfile(url, raise_if_error=False, **kwargs):
     try:
         response = requests.get(
             url,
+            timeout=DEFAULT_TIMEOUT,
             **options,
         )
         response.raise_for_status()

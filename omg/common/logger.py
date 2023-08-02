@@ -12,7 +12,7 @@ class LogConfig(BaseModel):
 
     LOGGER_NAME: str = "app"
     LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
-    LOG_LEVEL: str = os.getenv("OMG_LOG_LEVEL", "ERROR")
+    LOG_LEVEL: str = os.getenv("OMG_LOG_LEVEL", "DEBUG")
 
     # Logging config
     version: int = 1

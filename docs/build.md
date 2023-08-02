@@ -1,6 +1,5 @@
 # Build
 
-
 **Requirements**
 
 ```bash
@@ -57,8 +56,6 @@ pip install -i https://test.pypi.org/simple/ myapp==0.0.1
 
 ```
 
-
-
 Finnaly, upload to Pypi
 
 ```bash
@@ -90,6 +87,7 @@ $ pip install -e .
 $ myapp [...]
 
 ```
+
 ```bash
 
 ./clear.sh

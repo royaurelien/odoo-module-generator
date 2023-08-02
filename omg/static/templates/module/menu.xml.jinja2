@@ -1,18 +1,14 @@
 <odoo>
-    <data>
-
-        <menuitem
-            id="{{ model_slugified }}_menu_root"
-            name="New App"
-            web_icon="fa fa-bug,#FFFFFF,#714b67"
-            groups="{{ module_name }}.group_user"
-            sequence="99"/>
+    <menuitem
+        id="{{ model_slugified }}_menu_root"
+        name="New App"
+        web_icon="fa fa-bug,#FFFFFF,#714b67"
+        groups="{{ module_name }}.group_user"
+        sequence="99"/>
 
 
-        <menuitem id="{{ model_slugified }}_menu" name="New Model" parent="{{ model_slugified }}_menu_root" sequence="10" action="action_view_{{ model_slugified }}"/>
+    <menuitem id="{{ model_slugified }}_menu" name="New Model" parent="{{ model_slugified }}_menu_root" sequence="10" action="action_view_{{ model_slugified }}"/>
 
-        <menuitem id="new_app_menu" name="New App" parent="contacts.res_partner_menu_config" sequence="99"/>
-        <menuitem id="{{ model_slugified }}_contacts" name="New Model" parent="new_app_menu" sequence="99" action="action_view_{{ model_slugified }}"/>
-
-    </data>
+    <menuitem id="new_app_menu" name="New App" parent="contacts.res_partner_menu_config" sequence="99"/>
+    <menuitem id="{{ model_slugified }}_contacts" name="New Model" parent="new_app_menu" sequence="99" action="action_view_{{ model_slugified }}"/>
 </odoo>

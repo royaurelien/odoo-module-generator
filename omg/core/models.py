@@ -58,21 +58,25 @@ class IrModelAccessLine(BaseModel):
     perm_create: int = 1
     perm_unlink: int = 1
 
+    def to_csv(self):
+        data = self.dict()
+        data["model_id:id"] = data.pop("model_id")
+        data["group_id:id"] = data.pop("group_id")
+
+        return data
+
 
 class IrModelAccess(BaseModel):
-    __fields__ = [
-        "id",
-        "name",
-        "model_id",
-        "group_id",
-        "perm_read",
-        "perm_write",
-        "perm_create",
-        "perm_unlink",
-    ]
-
     path: str = ""
     lines: List[IrModelAccessLine] = []
+
+    @staticmethod
+    def header():
+        keys = list(IrModelAccessLine.schema()["properties"].keys())
+        keys[2] = "model_id:id"
+        keys[3] = "group_id:id"
+
+        return keys
 
 
 class Field(BaseModel):

@@ -19,4 +19,5 @@ class {{ class_name }}(models.TransientModel):
     is_checked = fields.Boolean(default=False)
 
     def validate(self):
+        """Validate wizard."""
         return True

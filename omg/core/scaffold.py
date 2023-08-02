@@ -158,7 +158,7 @@ class ScaffoldModule(Scaffold):
         helper.render_xml("module/res_partner.xml.jinja2", "views")
 
         # custom controller
-        helper = Helper(self.name, "main", root)
+        helper.reset(self.name, "main", root)
         helper.render_python("module/main.py.jinja2", "controllers")
 
         # custom model

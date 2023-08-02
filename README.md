@@ -1,4 +1,3 @@
-
 # myapp
 
 _**MyApp** Command Line Tool_
@@ -6,7 +5,6 @@ _**MyApp** Command Line Tool_
 ![PyPI](https://img.shields.io/pypi/v/myapp)
 ![PyPI](https://img.shields.io/pypi/pyversions/myapp)
 ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/royaurelien/myapp)
-
 
 ## Installation
 
@@ -18,11 +16,12 @@ pip install myapp
 
 ## Quickstart
 
-*On first launch, you will be asked to enter certain parameters.*
+_On first launch, you will be asked to enter certain parameters._
 
 Create project :
 
 `project name` is the name of the online database you want to create locally.
+
 ```bash
 myapp project new <project name>
 ```

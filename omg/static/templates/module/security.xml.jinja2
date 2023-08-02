@@ -1,31 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
+    <record id="module_category_custom" model="ir.module.category">
+        <field name="name">Custom</field>
+        <field name="description">Custom Category</field>
+        <field name="sequence">10</field>
+    </record>
 
-        <record id="{{ module_name }}.module_category_custom" model="ir.module.category">
-            <field name="name">Custom</field>
-            <field name="description">Custom Category</field>
-            <field name="sequence">10</field>
-        </record>
+    <record id="group_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="module_category_custom"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
 
-        <record id="{{ module_name }}.group_user" model="res.groups">
-            <field name="name">User</field>
-            <field name="category_id" ref="{{ module_name }}.module_category_custom"/>
-            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        </record>
+    <record id="group_advanced" model="res.groups">
+        <field name="name">Advanced User</field>
+        <field name="category_id" ref="module_category_custom"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
 
-        <record id="{{ module_name }}.group_advanced" model="res.groups">
-            <field name="name">Advanced User</field>
-            <field name="category_id" ref="{{ module_name }}.module_category_custom"/>
-            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        </record>
-
-        <record id="{{ module_name }}.group_manager" model="res.groups">
-            <field name="name">Manager</field>
-            <field name="category_id" ref="{{ module_name }}.module_category_custom"/>
-            <field name="implied_ids" eval="[(4, ref('{{ module_name }}.group_user')), (4, ref('{{ module_name }}.group_advanced'))]"/>
-            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
-        </record>
-
-    </data>
+    <record id="group_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="category_id" ref="module_category_custom"/>
+        <field name="implied_ids" eval="[(4, ref('{{ module_name }}.group_user')), (4, ref('{{ module_name }}.group_advanced'))]"/>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
 </odoo>

@@ -129,13 +129,15 @@ class ModelAccessHelper:
 
     def save(self):
         """Save to ir.model.access.csv"""
-        header = self.ir_model_access.__fields__
-        data = self.ir_model_access.dict()["lines"]
+
+        fieldnames = IrModelAccess.header()
 
         with open(self.filepath, "w", encoding=DEFAULT_ENCODING, newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=header)
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
-            writer.writerows(data)
+
+            for line in self.ir_model_access.lines:
+                writer.writerow(line.to_csv())
 
 
 class Helper(ModelHelper):
@@ -185,6 +187,8 @@ class Helper(ModelHelper):
         """Get XML files."""
         keys = ["views", "wizard", "demo", "data", "report", "security"]
         files = {}
+
+        _logger.debug(self._files)
 
         for key in keys:
             files.setdefault(key, [])
