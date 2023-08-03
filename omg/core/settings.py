@@ -10,6 +10,7 @@ from pydantic_settings import BaseSettings
 from omg.common.logger import _logger
 from omg.common.path import apppath
 from omg.common.tools import DEFAULT_ENCODING, save_to
+from omg.core.models import DefaultManifest, RepositoryTemplate
 
 
 class Settings(BaseSettings):
@@ -17,20 +18,15 @@ class Settings(BaseSettings):
     __prompt__ = True
 
     log_level: str = ""
-    odoo_repo_tmpl_name: str = "royaurelien/odoo-repository-template"
-    odoo_repo_tmpl_branch: str = "master"
-    odoo_repo_tmpl_commands: list = [
-        "git add {}",
-        "git commit -m '[NEW]..OMG..:post_install_hook!'",
-        "pre-commit install",
-        # "pre-commit run --all-files",
-    ]
+    repo_tmpl: RepositoryTemplate = RepositoryTemplate()
 
-    default_author: str = "Aurelien ROY"
-    default_website: str = "https://github.com/royaurelien"
-    default_mainteners: list = ["Aurelien ROY"]
-    default_category: str = "Technical"
-    default_license: str = "LGPL-3"
+    default_manifest: DefaultManifest = DefaultManifest(
+        author="Aurélien ROY",
+        website="https://github.com/royaurelien",
+        mainteners=["Aurelien ROY"],
+        category="Technical",
+        license="LGPL-3",
+    )
 
     logo_filepath: str = ""
 
@@ -106,12 +102,12 @@ class Settings(BaseSettings):
             self = cls.parse_raw(data)
         except ValidationError as error:
             _logger.error(error)
-
-            for item in error.errors():
-                for key in item.get("loc"):
-                    if key in data:
-                        data.pop(key)
-                self = cls.parse_raw(data)
+            _logger.debug(error.errors())
+            # for item in error.errors():
+            #     for key in item.get("loc"):
+            #         if key in data:
+            #             data.pop(key)
+            #     self = cls.parse_raw(data)
 
         self.save()
         _logger.debug("Missing values: %s", self._get_missing_values())

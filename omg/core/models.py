@@ -1,45 +1,54 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
-from omg.core.settings import get_settings
+# from pydantic.functional_serializers import PlainSerializer
 
-settings = get_settings()
 
 BaseModel.model_config["protected_namespaces"] = ()
 
 
-class Manifest(BaseModel):
-    __prompt__ = [
-        "name",
-        "description",
-        "category",
-        "website",
-        "author",
-        "license",
+class RepositoryTemplate(BaseModel):
+    name: str = "royaurelien/odoo-repository-template"
+    branch: str = "master"
+    commit_enable: bool = True
+    commit_message: str = "[NEW] Quality / Pre-commit"
+    post_hook: list = [
+        "pre-commit install",
+        # "pre-commit run --all-files",
     ]
 
-    technical_name: str
 
+class DefaultManifest(BaseModel):
+    odoo_version: str = "16.0"
+    module_version: str = "1.0.0"
+    # version: str = "16.0.1.0.0"
+    category: str
+    website: str
+    author: str
+    mainteners: List[str]
+    license: str
+
+
+class Manifest(DefaultManifest):
     name: str = "Module name"
-    version: str = "16.0.1.0.0"
-    category: str = settings.default_category
     description: str = "Publish your customer references"
     summary: str = "Publish your customer references"
-    website: str = settings.default_website
-    author: str = settings.default_author
-    mainteners: List[str] = settings.default_mainteners
-    depends: List[str] = [
-        "base",
-    ]
     external_dependencies: dict = {}
     data: List[str] = []
     demo: List[str] = []
     assets: dict = {}
-    installable: str = True
-    auto_install: str = False
-    application: str = False
-    license: str = settings.default_license
+    depends: List[str] = [
+        "base",
+    ]
+    installable: bool = True
+    auto_install: bool = False
+    application: bool = False
+
+    @computed_field(return_type=str)
+    @property
+    def version(self):
+        return f"{self.odoo_version}.{self.module_version}"
 
     def add_items(self, key, value):
         """Add items to list fields."""

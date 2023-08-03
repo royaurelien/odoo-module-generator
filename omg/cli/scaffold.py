@@ -4,7 +4,7 @@ import click
 
 from omg.common.exceptions import ExternalCommandFailed
 from omg.core.repository import Repository
-from omg.core.scaffold import RepositoryTemplate, ScaffoldModule
+from omg.core.scaffold import ScaffoldModule, ScaffoldRepository
 from omg.core.settings import get_settings
 
 settings = get_settings()  # pylint: disable=C0413
@@ -17,12 +17,15 @@ def repo(path):
 
     repository = Repository(path)
 
-    scaffold = RepositoryTemplate.load()
+    scaffold = ScaffoldRepository.load()
     files = scaffold.extract_to(repository.path)
-    arg = " ".join(files)
+
+    if settings.repo_tmpl.commit_enable:
+        repository.add(files)
+        repository.commit(settings.repo_tmpl.commit_message)
 
     try:
-        scaffold.post_install_hook(path, arg)
+        scaffold.post_install_hook(path)
     except ExternalCommandFailed as error:
         click.echo(error)
         sys.exit(1)

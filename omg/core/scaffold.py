@@ -68,28 +68,23 @@ class Scaffold:
         os.makedirs(path, exist_ok=True)
         files = extract_to(self.source, path)
 
+        _logger.debug("files: %s", files)
+
         return files
 
 
-class RepositoryTemplate(Scaffold):
+class ScaffoldRepository(Scaffold):
     @classmethod
     def load(cls):
         """Return RepositoryTemplate object from settings url."""
-        url = get_github_archive(
-            settings.odoo_repo_tmpl_name, settings.odoo_repo_tmpl_branch
-        )
+        url = get_github_archive(settings.repo_tmpl.name, settings.repo_tmpl.branch)
         return cls.from_url(url)
 
     def post_install_hook(self, path, *args):  # pylint: disable=R0201
         """Execute post install hook."""
 
-        for i, cmd in enumerate(settings.odoo_repo_tmpl_commands, 1):
-            if "{}" in cmd and args:
-                cmd = cmd.format(*args)
-
-            _logger.debug(
-                "Run %s/%s: %s", i, len(settings.odoo_repo_tmpl_commands), cmd
-            )
+        for i, cmd in enumerate(settings.repo_tmpl.post_hook, 1):
+            _logger.debug("Run %s/%s: %s", i, len(settings.repo_tmpl.post_hook), cmd)
 
             res = run_external_command(cmd, cwd=path)
             if not res:
@@ -118,24 +113,22 @@ class ScaffoldModule(Scaffold):
         self.manifest = None
 
     def _get_manifest(self, prompt_user=True):
-        manifest = Manifest(technical_name=self.name)
+        default_values = settings.default_manifest.dict()
 
         if not prompt_user:
-            return manifest
+            return Manifest(**default_values)
 
         vals = {}
-        for key in manifest.__prompt__:
-            default_value = getattr(manifest, key)
-            res = input(
-                f"{convert_string_to_human_readable(key)} '{default_value}' ? [Y/n] : "
-            )
+        for key, value in default_values.items():
+            res = input(f"{convert_string_to_human_readable(key)} '{value}' ? [Y/n] : ")
 
             if not res:
+                vals[key] = value
                 continue
 
             vals[key] = res
 
-        return manifest.copy(update=vals)
+        return Manifest(**vals)
 
     def _copy_logo(self):
         src = get_icon_filepath()
@@ -212,7 +205,11 @@ class ScaffoldModule(Scaffold):
 
         # Save manifest
         filepath = os.path.join(root, MANIFEST_FILENAME)
-        content = self.manifest.dict()
+
+        # content = self.manifest.dict()
+        content = self.manifest.model_dump(exclude={"odoo_version", "module_version"})
+        _logger.debug(content)
+
         save_to(content, filepath, code=True, delete=True)
 
     def user_prompt(self):
@@ -240,3 +237,17 @@ class ScaffoldModule(Scaffold):
     def complete_manifest(self):
         """Ask user to complete manifest fields."""
         self.manifest = self._get_manifest()
+
+        # question_1 = "Would you like to create a custom model ? [y/N]"
+        # default_value_1 = False
+        # answer_1 = input(question_1)
+        # result_1 = not default_value_1
+
+        # if not answer_1:
+        #     result_1 = default_value_1
+
+        # if result_1:
+        #     question_2 = "Would you like to create a custom model ? [y/N]"
+        #     default_value_2 = "cust.om"
+        #     answer_2 = input(question_2)
+        #     result_2 = default_value_2

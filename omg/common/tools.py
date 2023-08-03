@@ -85,7 +85,7 @@ def run_external_command(cmd, **kwargs):
     if isinstance(res, str) and len(res) == 0:
         res = True
 
-    _logger.warning("Result: '%s'", res)
+    _logger.debug("Result: '%s'", res)
 
     return res
 
@@ -168,7 +168,7 @@ def download_to_tempfile(url, raise_if_error=False, **kwargs):
     _logger.debug("Guess mimetype: %s", mimetype)
 
     headers = kwargs.get("headers", {})
-    options = {"timeout": DEFAULT_TIMEOUT}
+    options = {}
 
     if headers:
         options["headers"] = headers
