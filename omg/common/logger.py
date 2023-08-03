@@ -36,7 +36,7 @@ class LogConfig(BaseModel):
     }
 
 
-dictConfig(LogConfig().dict())
+dictConfig(LogConfig().model_dump())
 
 _logger = logger = logging.getLogger("app")
 

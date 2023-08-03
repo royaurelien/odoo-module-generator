@@ -21,7 +21,7 @@ from omg.common.tools import (
     run_external_command,
     save_to,
 )
-from omg.core.models import Manifest
+from omg.core.models import DefaultListQuestion, DefaultQuestion, Manifest
 from omg.core.repository import Repository
 from omg.core.settings import get_settings
 
@@ -51,6 +51,8 @@ def get_icon_filepath():
 
 
 class Scaffold:
+    source: str = ""
+
     def __init__(self, source):
         self.source = source
 
@@ -96,46 +98,45 @@ class ScaffoldRepository(Scaffold):
         return Repository(self.source)
 
 
+def prompt_manifest():
+    """Ask user to complete Manifest keys."""
+
+    default_values = settings.default_manifest.dict()
+
+    vals = {}
+    for key, value in default_values.items():
+        if isinstance(value, list):
+            question = DefaultListQuestion
+        else:
+            question = DefaultQuestion
+
+        vals[key] = question(
+            question=convert_string_to_human_readable(key),
+            default=value,
+        ).prompt()
+
+    return Manifest(**vals)
+
+
 class ScaffoldModule(Scaffold):
-    __fields__ = {
-        "name": "Name (technical name)",
-        "mod_name": "Module name (Human readable)",
-        "mod_description": "Description",
-    }
+    name: str = None
+    path: str = None
+    module_path: str = None
+    values: dict = {}
+
+    add_model: bool = False
+    model_name: str = None
 
     def __init__(self, path):
         super().__init__(None)
-
-        self.name = None
         self.path = path
-        self.module_path = None
-        self.values = {}
-        self.manifest = None
-
-    def _get_manifest(self, prompt_user=True):
-        default_values = settings.default_manifest.dict()
-
-        if not prompt_user:
-            return Manifest(**default_values)
-
-        vals = {}
-        for key, value in default_values.items():
-            res = input(f"{convert_string_to_human_readable(key)} '{value}' ? [Y/n] : ")
-
-            if not res:
-                vals[key] = value
-                continue
-
-            vals[key] = res
-
-        return Manifest(**vals)
 
     def _copy_logo(self):
         src = get_icon_filepath()
         dest = os.path.join(self.module_path, "static/description", "icon.png")
         shutil.copyfile(src, dest)
 
-    def generate(self):
+    def generate(self, manifest: Manifest):
         """Create module folders."""
 
         root = self.module_path
@@ -201,53 +202,13 @@ class ScaffoldModule(Scaffold):
         views["data"].insert(1, model_access.filename)
 
         for key, items in views.items():
-            self.manifest.add_items(key, items)
+            manifest.add_items(key, items)
 
         # Save manifest
         filepath = os.path.join(root, MANIFEST_FILENAME)
 
-        # content = self.manifest.dict()
-        content = self.manifest.model_dump(exclude={"odoo_version", "module_version"})
+        # content = manifest.dict()
+        content = manifest.model_dump(exclude={"odoo_version", "module_version"})
         _logger.debug(content)
 
         save_to(content, filepath, code=True, delete=True)
-
-    def user_prompt(self):
-        """Prepare configuration and ask user to complete if necessary."""
-
-        technical_name = os.path.basename(self.path)
-        check_name = False
-
-        while not check_name or not technical_name:
-            res = input(f"Module name: {technical_name} ? [Y/n] : ")
-
-            if not res:
-                check_name = True
-                self.module_path = self.path
-            else:
-                technical_name = res
-                check_name = True
-                self.module_path = os.path.join(self.path, technical_name)
-
-        self.name = technical_name
-
-        # _logger.debug("Technical name: %s", technical_name)
-        # _logger.debug("Module path: %s", module_path)
-
-    def complete_manifest(self):
-        """Ask user to complete manifest fields."""
-        self.manifest = self._get_manifest()
-
-        # question_1 = "Would you like to create a custom model ? [y/N]"
-        # default_value_1 = False
-        # answer_1 = input(question_1)
-        # result_1 = not default_value_1
-
-        # if not answer_1:
-        #     result_1 = default_value_1
-
-        # if result_1:
-        #     question_2 = "Would you like to create a custom model ? [y/N]"
-        #     default_value_2 = "cust.om"
-        #     answer_2 = input(question_2)
-        #     result_2 = default_value_2

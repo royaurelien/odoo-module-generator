@@ -1,11 +1,97 @@
 from typing import List
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, ValidationError, computed_field
+from pydantic.type_adapter import TypeAdapter
+
+from omg.common.logger import _logger
 
 # from pydantic.functional_serializers import PlainSerializer
 
 
 BaseModel.model_config["protected_namespaces"] = ()
+
+
+class Question(BaseModel):
+    question: str = Field(title="Question")
+    default: bool = True
+
+    def prompt(self):
+        raise NotImplementedError()
+
+
+class YesNoQuestion(Question):
+    def prompt(self):
+        response = self.default
+        default = "[Y/n]" if self.default else "[y/N]"
+
+        while True:
+            res = input(f"{self.question} {default}: ")
+            if not res:
+                break
+
+            try:
+                response = TypeAdapter(bool).validate_python(res)
+            except ValidationError:
+                continue
+            break
+        return response
+
+
+def convert_string_list_list(value):
+    if isinstance(value, list):
+        return value
+
+    value = value.strip("[]").replace('"', "").replace("'", "")
+
+    if ", " in value:
+        value = value.split(", ")
+    else:
+        value = value.split(",")
+
+    return value
+
+
+class DefaultQuestion(Question):
+    default: str
+
+    def _cast(self, value):
+        return value
+
+    def _adaptater(self):
+        return TypeAdapter(str)
+
+    def prompt(self):
+        response = self.default
+        value = self.default
+
+        if isinstance(self.default, list):
+            value = ", ".join(self.default) if self.default else "[]"
+
+        while True:
+            res = input(f'{self.question} "{value}" ? [Y/n] : ')
+
+            if not res:
+                break
+
+            try:
+                res = self._cast(res)
+
+                response = self._adaptater().validate_python(res)
+            except ValidationError as error:
+                _logger.error(error)
+                continue
+            break
+        return response
+
+
+class DefaultListQuestion(DefaultQuestion):
+    default: List[str]
+
+    def _adaptater(self):
+        return TypeAdapter(List[str])
+
+    def _cast(self, value):
+        return convert_string_list_list(value)
 
 
 class RepositoryTemplate(BaseModel):
@@ -41,6 +127,7 @@ class Manifest(DefaultManifest):
     depends: List[str] = [
         "base",
     ]
+    # mainteners: List[str] = []
     installable: bool = True
     auto_install: bool = False
     application: bool = False
