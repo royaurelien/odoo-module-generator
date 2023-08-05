@@ -1,7 +1,7 @@
 # import mock
 
 
-from omg.core.models import DefaultListQuestion, convert_string_list_list
+from omg.core.models import DefaultListQuestion, convert_string_list_to_list
 
 values = [
     ("item", ["item"]),
@@ -20,7 +20,7 @@ values = [
 
 def test_1():
     for items in values:
-        assert convert_string_list_list(items[0]) == items[1]
+        assert convert_string_list_to_list(items[0]) == items[1]
 
 
 def test_2(monkeypatch):

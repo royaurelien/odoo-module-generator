@@ -1,6 +1,7 @@
 import json
 import mimetypes
 import os
+import pkgutil
 import shutil
 import subprocess
 import tarfile
@@ -16,6 +17,25 @@ from omg.common.logger import _logger, logs
 DEFAULT_ENCODING = "utf8"
 DEFAULT_TIMEOUT = 60
 MANIFEST_FILENAME = "__manifest__.py"
+
+
+def find_modules(path):
+    """Search for Odoo modules at path"""
+    # path = get_absolute_path(path)
+    modules = list(pkgutil.walk_packages([path]))
+
+    _logger.warning(modules)
+
+    # Is path a package?
+    res = [
+        os.path.basename(item.module_finder.path)
+        for item in filter(lambda item: item.name == "__manifest__", modules)
+    ]
+
+    if not res:
+        res = [item.name for item in filter(lambda item: item.ispkg, modules)]
+
+    return list(set(res))
 
 
 def get_absolute_path(path):

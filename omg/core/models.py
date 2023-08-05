@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List
 
 from pydantic import BaseModel, Field, ValidationError, computed_field
@@ -37,7 +38,7 @@ class YesNoQuestion(Question):
         return response
 
 
-def convert_string_list_list(value):
+def convert_string_list_to_list(value):
     if isinstance(value, list):
         return value
 
@@ -91,7 +92,7 @@ class DefaultListQuestion(DefaultQuestion):
         return TypeAdapter(List[str])
 
     def _cast(self, value):
-        return convert_string_list_list(value)
+        return convert_string_list_to_list(value)
 
 
 class RepositoryTemplate(BaseModel):
@@ -117,6 +118,29 @@ class DefaultManifest(BaseModel):
 
 
 class Manifest(DefaultManifest):
+    __keys__ = [
+        "name",
+        "description",
+        "summary",
+        "category",
+        "author",
+        "mainteners",
+        "website",
+        "depends",
+        "external_dependencies",
+        "data",
+        "demo",
+        "assets",
+        "installable",
+        "auto_install",
+        "application",
+        "license",
+    ]
+    __authorized_keys__ = [
+        "data",
+        "depends",
+    ]
+
     name: str = "Module name"
     description: str = "Publish your customer references"
     summary: str = "Publish your customer references"
@@ -142,6 +166,20 @@ class Manifest(DefaultManifest):
 
         attr = getattr(self, key)
         attr += value
+
+    def update(self, values):
+        filtered_values = {
+            k: v for k, v in values.items() if k in self.__authorized_keys__
+        }
+        return self.model_copy(update=filtered_values)
+
+    def prepare_to_save(self):
+        data = self.model_dump(exclude={"odoo_version", "module_version"})
+
+        res = OrderedDict([(key, data.get(key)) for key in self.__keys__])
+        _logger.debug(res)
+        # return json.loads(json.dumps(res))
+        return dict(res)
 
 
 class IrModelAccessLine(BaseModel):

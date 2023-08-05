@@ -99,7 +99,7 @@ class ScaffoldRepository(Scaffold):
 
 
 def prompt_manifest():
-    """Ask user to complete Manifest keys."""
+    """Ask user to complete Manifest values."""
 
     default_values = settings.default_manifest.dict()
 
@@ -131,7 +131,7 @@ class ScaffoldModule(Scaffold):
         super().__init__(None)
         self.path = path
 
-    def _copy_logo(self):
+    def _copy_icon(self):
         src = get_icon_filepath()
         dest = os.path.join(self.module_path, "static/description", "icon.png")
         shutil.copyfile(src, dest)
@@ -142,7 +142,7 @@ class ScaffoldModule(Scaffold):
         root = self.module_path
 
         create_dirs(root, MODULE_DIRECTORIES)
-        self._copy_logo()
+        self._copy_icon()
 
         model_access = ModelAccessHelper(root)
 
@@ -156,39 +156,40 @@ class ScaffoldModule(Scaffold):
         helper.render_python("module/main.py.jinja2", "controllers")
 
         # custom model
-        helper.reset(self.name, "cust.om", root)
-        helper.render_python("module/new_model.py.jinja2", "models")
-        helper.render_xml("module/new_model.xml.jinja2", "views")
-        helper.render_xml("module/menu.xml.jinja2", "views", "menu.xml")
-        helper.render_xml("module/demo.xml.jinja2", "demo", "demo.xml")
-        helper.render_xml("module/security.xml.jinja2", "security", "security.xml")
+        if self.add_model and self.model_name:
+            helper.reset(self.name, self.model_name, root)
+            helper.render_python("module/new_model.py.jinja2", "models")
+            helper.render_xml("module/new_model.xml.jinja2", "views")
+            helper.render_xml("module/menu.xml.jinja2", "views", "menu.xml")
+            helper.render_xml("module/demo.xml.jinja2", "demo", "demo.xml")
+            helper.render_xml("module/security.xml.jinja2", "security", "security.xml")
 
-        model_access.add(
-            helper.model_name,
-            f"{helper.module_name}.group_user",
-            RIGHTS_NO_UNLINK,
-        )
-        model_access.add(
-            helper.model_name,
-            f"{helper.module_name}.group_manager",
-            RIGHTS_FULL,
-            "manager",
-        )
+            model_access.add(
+                helper.model_name,
+                f"{helper.module_name}.group_user",
+                RIGHTS_NO_UNLINK,
+            )
+            model_access.add(
+                helper.model_name,
+                f"{helper.module_name}.group_manager",
+                RIGHTS_FULL,
+                "manager",
+            )
 
-        # custom wizard
-        ctx = {
-            "related_model_name": helper.model_name,
-            "related_model_slugified": helper.model_slugified,
-        }
+            # custom wizard
+            ctx = {
+                "related_model_name": helper.model_name,
+                "related_model_slugified": helper.model_slugified,
+            }
 
-        helper.reset(self.name, "custom.wizard", root)
-        helper.render_python("module/wizard.py.jinja2", "wizard", ctx=ctx)
-        helper.render_xml("module/wizard.xml.jinja2", "wizard", ctx=ctx)
+            helper.reset(self.name, "custom.wizard", root)
+            helper.render_python("module/wizard.py.jinja2", "wizard", ctx=ctx)
+            helper.render_xml("module/wizard.xml.jinja2", "wizard", ctx=ctx)
 
-        model_access.add(helper.model_name, "base.group_user", RIGHTS_FULL)
+            model_access.add(helper.model_name, "base.group_user", RIGHTS_FULL)
 
-        # Save ir.model.access.csv
-        model_access.save()
+            # Save ir.model.access.csv
+            model_access.save()
 
         # Make init files
         init_helper = InitHelper(root)
@@ -208,7 +209,7 @@ class ScaffoldModule(Scaffold):
         filepath = os.path.join(root, MANIFEST_FILENAME)
 
         # content = manifest.dict()
-        content = manifest.model_dump(exclude={"odoo_version", "module_version"})
+        content = manifest.prepare_to_save()
         _logger.debug(content)
 
         save_to(content, filepath, code=True, delete=True)
