@@ -7,7 +7,7 @@ from omg.core.settings import get_settings
 settings = get_settings()  # pylint: disable=C0413
 
 from omg.cli.scaffold import module, repo  # noqa: E402
-from omg.cli.update import manifest  # noqa: E402
+from omg.cli.update import cmd_manifest  # noqa: E402
 
 if not settings.is_ready and settings.ask_to_user:
     click.echo("Please fill configuration to continue :")
@@ -32,7 +32,7 @@ def update():
 scaffold.add_command(repo)
 scaffold.add_command(module)
 
-update.add_command(manifest)
+update.add_command(cmd_manifest)
 
 cli.add_command(scaffold)
 cli.add_command(update)

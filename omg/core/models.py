@@ -137,8 +137,14 @@ class Manifest(DefaultManifest):
         "license",
     ]
     __authorized_keys__ = [
+        "name",
         "data",
         "depends",
+        "assets",
+        "description",
+        "summary",
+        "external_dependencies",
+        "demo",
     ]
 
     name: str = "Module name"
@@ -159,6 +165,7 @@ class Manifest(DefaultManifest):
     @computed_field(return_type=str)
     @property
     def version(self):
+        """Computed Odoo version."""
         return f"{self.odoo_version}.{self.module_version}"
 
     def add_items(self, key, value):
@@ -168,12 +175,15 @@ class Manifest(DefaultManifest):
         attr += value
 
     def update(self, values):
+        """Update with dict."""
         filtered_values = {
             k: v for k, v in values.items() if k in self.__authorized_keys__
         }
+        _logger.error(filtered_values)
         return self.model_copy(update=filtered_values)
 
     def prepare_to_save(self):
+        """Prepare ordered content to save."""
         data = self.model_dump(exclude={"odoo_version", "module_version"})
 
         res = OrderedDict([(key, data.get(key)) for key in self.__keys__])

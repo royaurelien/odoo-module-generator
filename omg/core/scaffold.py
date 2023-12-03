@@ -42,14 +42,6 @@ MODULE_DIRECTORIES = [
 ]
 
 
-def get_icon_filepath():
-    """Return module icon filepath."""
-    if settings.logo_filepath and os.path.exists(settings.logo_filepath):
-        return settings.logo_filepath
-
-    return os.path.join(apppath.images_dir, "icon.png")
-
-
 class Scaffold:
     source: str = ""
 
@@ -132,7 +124,7 @@ class ScaffoldModule(Scaffold):
         self.path = path
 
     def _copy_icon(self):
-        src = get_icon_filepath()
+        src = settings.get_default_icon_path()
         dest = os.path.join(self.module_path, "static/description", "icon.png")
         shutil.copyfile(src, dest)
 

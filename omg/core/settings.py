@@ -143,6 +143,13 @@ class Settings(BaseSettings):
             value = f"<Unknown variable '{name}'>"
         return value
 
+    def get_default_icon_path(self):
+        """Return module icon filepath."""
+        if self.logo_filepath and os.path.exists(self.logo_filepath):
+            return self.logo_filepath
+
+        return os.path.join(apppath.images_dir, "icon.png")
+
 
 @lru_cache()
 def get_settings():

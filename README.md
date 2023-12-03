@@ -1,44 +1,35 @@
-# myapp
 
-_**MyApp** Command Line Tool_
+# Odoo Module Generator
 
-![PyPI](https://img.shields.io/pypi/v/myapp)
-![PyPI](https://img.shields.io/pypi/pyversions/myapp)
-![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/royaurelien/myapp)
+_**OMG** Command Line Tool_
+
+![PyPI](https://img.shields.io/pypi/v/odoo-module-generator) ![PyPI](https://img.shields.io/pypi/pyversions/odoo-module-generator)
+
 
 ## Installation
 
 Install from PyPI:
-
 ```bash
-pip install myapp
+pip install odoo-module-generator
 ```
 
 ## Quickstart
 
-_On first launch, you will be asked to enter certain parameters._
 
-Create project :
-
-`project name` is the name of the online database you want to create locally.
+### Scaffold
+#### Module
 
 ```bash
-myapp project new <project name>
+omg scaffold module <path>
 ```
 
-Run project :
+#### Repository
 
 ```bash
-myapp project run <project name> --reload
+omg scaffold repo <path>
 ```
 
-Update modules :
-
+### Update Manifest
 ```bash
-myapp project update-modules <project name> <database name> module1,module2
+omg update manifest <path>
 ```
-
-## Documentation
-
-Please refer to :
-[https://royaurelien.github.io/myapp/](https://royaurelien.github.io/myapp/)

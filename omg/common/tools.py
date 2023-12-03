@@ -19,6 +19,11 @@ DEFAULT_TIMEOUT = 60
 MANIFEST_FILENAME = "__manifest__.py"
 
 
+def copy_file(source, destination):
+    """Copy file from source to destination."""
+    shutil.copyfile(source, destination)
+
+
 def find_modules(path):
     """Search for Odoo modules at path"""
     # path = get_absolute_path(path)
