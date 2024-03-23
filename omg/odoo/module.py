@@ -1,8 +1,7 @@
 import ast
 
-from omg.core.models import File
 from omg.common.tools import generate
-
+from omg.core.models import File
 from omg.odoo import OdooModule
 from omg.odoo.model import Model
 

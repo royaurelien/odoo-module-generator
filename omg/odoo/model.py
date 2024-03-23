@@ -1,8 +1,7 @@
 import ast
 
-
-from omg.core.models import File
 from omg.common.tools import generate, get_arg, get_assign, get_keyword
+from omg.core.models import File
 from omg.odoo import OdooModel, get_ast_source_segment
 
 # from odoo_analyse.utils import get_ast_source_segment

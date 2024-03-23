@@ -1,3 +1,4 @@
+import ast
 import json
 import mimetypes
 import os
@@ -6,16 +7,14 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
-import ast
-
-import black
-import requests
-from requests.exceptions import HTTPError
 from collections import namedtuple
 
+import black
 import jinja2
+import requests
 from black.parsing import InvalidInput
 from jinja2.exceptions import UndefinedError
+from requests.exceptions import HTTPError
 
 from omg.common.exceptions import DownloadError
 from omg.common.logger import _logger, logs

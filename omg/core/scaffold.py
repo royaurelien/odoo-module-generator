@@ -3,7 +3,6 @@ import shutil
 
 from omg.common.exceptions import ExternalCommandFailed
 from omg.common.logger import _logger
-from omg.common.path import apppath
 from omg.common.render import (
     RIGHTS_FULL,
     RIGHTS_NO_UNLINK,

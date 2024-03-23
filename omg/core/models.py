@@ -1,13 +1,11 @@
-from collections import OrderedDict
+# from pydantic.functional_serializers import PlainSerializer
+from collections import OrderedDict, namedtuple
 from typing import List
 
 from pydantic import BaseModel, Field, ValidationError, computed_field
 from pydantic.type_adapter import TypeAdapter
 
 from omg.common.logger import _logger
-
-# from pydantic.functional_serializers import PlainSerializer
-from collections import namedtuple
 
 File = namedtuple(
     "File",

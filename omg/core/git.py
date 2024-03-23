@@ -4,7 +4,6 @@ from omg.common.logger import _logger
 
 
 class Git:
-
     def __init__(self, path: str) -> None:
         self.path = path
 

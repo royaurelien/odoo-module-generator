@@ -4,9 +4,9 @@ import shutil
 import sys
 from io import StringIO
 
+from omg.common.logger import _logger
 from omg.core.git import Git
 from omg.odoo import Odoo
-from omg.common.logger import _logger
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 

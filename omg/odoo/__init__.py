@@ -10,7 +10,7 @@ from odoo_analyse import Module as OdooModule
 from odoo_analyse import Model as OdooModel
 from odoo_analyse.field import Field as OdooField
 
-# from odoo_analyse.utils import get_ast_source_segment
+from odoo_analyse.utils import get_ast_source_segment
 
 from omg.odoo.module import Module
 from omg.odoo.model import Model
@@ -30,7 +30,6 @@ __all__ = [
 
 
 class Odoo(OOdoo):
-
     def load_path(self, paths, *, max_depth=None, **config):
         """Overrided to replace Module"""
         if isinstance(paths, str):

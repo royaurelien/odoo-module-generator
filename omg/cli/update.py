@@ -4,7 +4,7 @@ import os
 import click
 
 from omg.common.logger import _logger
-from omg.common.tools import find_modules, get_absolute_path, save_to, copy_file
+from omg.common.tools import copy_file, find_modules, get_absolute_path, save_to
 
 # from omg.common.exceptions import ExternalCommandFailed
 from omg.core.scaffold import prompt_manifest
