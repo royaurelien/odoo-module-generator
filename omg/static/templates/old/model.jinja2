@@ -1,0 +1,18 @@
+#
+#      ____  __  __  _____
+#     / __ \|  \/  |/ ____|
+#    | |  | | \  / | |  __
+#    | |  | | |\/| | | |_ |
+#    | |__| | |  | | |__| |
+#     \____/|_|  |_|\_____|
+#
+#
+
+from odoo import api, fields, models
+
+class {{ classname }}(models.Model):
+    {% if name and not inherit %}_name = "{{ name }}"{% endif %}
+    {% if inherit %}_inherit = "{{ inherit }}"{% endif %}
+
+    {% for field in fields %}{{ field }}
+    {% endfor %}

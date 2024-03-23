@@ -7,7 +7,12 @@ from pydantic.type_adapter import TypeAdapter
 from omg.common.logger import _logger
 
 # from pydantic.functional_serializers import PlainSerializer
+from collections import namedtuple
 
+File = namedtuple(
+    "File",
+    ["name", "path", "content"],
+)
 
 BaseModel.model_config["protected_namespaces"] = ()
 

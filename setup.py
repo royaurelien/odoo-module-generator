@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="odoo-module-generator",
-    version="0.1.2",
+    version="0.1.3",
     description="Odoo Module Generator",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -36,6 +36,7 @@ setup(
         "jinja2>=3.1.1",
         "requests>=2.28.1",
         "gitpython>=3.1.27",
+        "odoo-analyse[graph]>=2.0.0",
     ],
     python_requires=">=3.8",
     extras_require={},
