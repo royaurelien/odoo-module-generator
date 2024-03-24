@@ -24,6 +24,20 @@ DEFAULT_TIMEOUT = 60
 MANIFEST_FILENAME = "__manifest__.py"
 TEMPLATE_DIR = os.path.abspath("omg/static/templates/old/")
 
+HEADER = """
+#
+#      ____  __  __  _____
+#     / __ \|  \/  |/ ____|
+#    | |  | | \  / | |  __
+#    | |  | | |\/| | | |_ |
+#    | |__| | |  | | |__| |
+#     \____/|_|  |_|\_____|
+#
+#
+{}
+
+""".format
+
 
 File = namedtuple("File", ["name", "path", "content"])
 
@@ -214,16 +228,20 @@ def save_to(content, filepath, **kwargs):
     """Save content to filepath."""
 
     code = bool(kwargs.get("code", False))
-    delete = bool(kwargs.get("code", False))
+    delete = bool(kwargs.get("delete", False))
+    header = bool(kwargs.get("header", False))
+    mode = kwargs.get("mode", "w+")
+
+    if header:
+        content = HEADER(content)
 
     if code:
         content = format_code(content)
 
-    if delete:
-        if os.path.exists(filepath):
-            os.remove(filepath)
+    if delete and os.path.exists(filepath):
+        os.remove(filepath)
 
-    with open(filepath, "w+", encoding=DEFAULT_ENCODING) as file:
+    with open(filepath, mode, encoding=DEFAULT_ENCODING) as file:
         file.write(content)
 
 

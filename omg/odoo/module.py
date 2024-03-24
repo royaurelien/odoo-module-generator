@@ -13,7 +13,7 @@ from omg.common.logger import _logger
 from omg.odoo.model import Model
 from omg.core.models import Manifest
 from omg.common.render import ModelAccessHelper, RIGHTS_FULL
-from omg.common.tools import fix_indentation, try_automatic_port, format_code
+from omg.common.tools import fix_indentation, try_automatic_port, save_to
 
 from omg.common.node import Cleaner
 from omg.core.settings import get_settings
@@ -314,8 +314,7 @@ class Module:
         filepath = os.path.join(path, "__init__.py")
         content = self._generate_init(modules)
 
-        with open(filepath, "w") as file:
-            file.write(content)
+        save_to(content, filepath, mode="w", header=True)
 
         return filepath
 
@@ -329,14 +328,13 @@ class Module:
         manifest.data = []
         content = manifest.prepare_to_save()
 
-        with open(filepath, "w") as file:
-            file.write(format_code(content))
+        save_to(content, filepath, mode="w", header=True)
 
         return filepath
 
     def write(self):
         to_keep = []
-        filenames = []
+        modules = []
         models_path = os.path.join(self.path, "models")
         os.makedirs(models_path, exist_ok=True)
 
@@ -350,25 +348,19 @@ class Module:
                 model_access.add(name, "base.group_user", RIGHTS_FULL)
 
             # Write model
-            with open(filepath, "w") as file:
-                file.write(content)
-
+            save_to(content, filepath, mode="w", header=True, code=True)
             to_keep.append(filepath)
-            filenames.append(model.sql_name)
+            modules.append(model.sql_name)
 
         # Models init
-        filepath = self.save_init(models_path, filenames)
-        to_keep.append(filepath)
+        to_keep.append(self.save_init(models_path, modules))
 
         # Module init
-        filepath = self.save_init(self.path, ["models"])
-        to_keep.append(filepath)
+        to_keep.append(self.save_init(self.path, ["models"]))
 
         # Manifest
-        filepath = self.save_manifest()
-        to_keep.append(filepath)
+        to_keep.append(self.save_manifest())
 
-        print(model_access)
         if not model_access.void:
             model_access.save()
             to_keep.append(model_access.filepath)
