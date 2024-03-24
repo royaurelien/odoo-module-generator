@@ -12,6 +12,7 @@ import shutil
 from omg.common.logger import _logger
 from omg.odoo.model import Model
 from omg.core.models import Manifest
+from omg.common.render import ModelAccessHelper, RIGHTS_FULL
 from omg.common.tools import fix_indentation, try_automatic_port, format_code
 
 from omg.common.node import Cleaner
@@ -294,7 +295,6 @@ class Module:
         files = set(
             str(f.absolute()) for f in Path(self.path).rglob("*") if f.is_file()
         ) - set(exclude_files)
-        print(files)
 
         dirs = set(
             str(f.absolute())
@@ -307,45 +307,20 @@ class Module:
             os.remove(filepath)
 
         for path in dirs:
-            if os.path.exists(path):
+            if os.path.exists(path) and len(os.listdir(path)) == 0:
                 shutil.rmtree(path)
 
-    def write(self):
+    def save_init(self, path, modules):
+        filepath = os.path.join(path, "__init__.py")
+        content = self._generate_init(modules)
 
-        # _logger.error(self.files)
-
-        to_keep = []
-        filenames = []
-        models_path = os.path.join(self.path, "models")
-        os.makedirs(models_path, exist_ok=True)
-
-        for name, model in self.models.items():
-
-            filepath = os.path.join(models_path, model.filename)
-            content = self._get_source(model)
-            to_keep.append(filepath)
-
-            with open(filepath, "w") as file:
-                file.write(content)
-
-            filenames.append(model.sql_name)
-
-        # Init models
-        filepath = os.path.join(models_path, "__init__.py")
-        to_keep.append(filepath)
-        content = self._generate_init(filenames)
         with open(filepath, "w") as file:
             file.write(content)
 
-        # Init module
-        filepath = os.path.join(self.path, "__init__.py")
-        to_keep.append(filepath)
-        content = self._generate_init(["models"])
-        with open(filepath, "w") as file:
-            file.write(content)
+        return filepath
 
+    def save_manifest(self):
         filepath = os.path.join(self.path, "__manifest__.py")
-        to_keep.append(filepath)
 
         vals = settings.default_manifest.dict()
         vals.update({k: v for k, v in self.manifest.items() if v})
@@ -353,7 +328,50 @@ class Module:
         manifest = Manifest(**vals)
         manifest.data = []
         content = manifest.prepare_to_save()
+
         with open(filepath, "w") as file:
             file.write(format_code(content))
 
+        return filepath
+
+    def write(self):
+        to_keep = []
+        filenames = []
+        models_path = os.path.join(self.path, "models")
+        os.makedirs(models_path, exist_ok=True)
+
+        model_access = ModelAccessHelper(self.path)
+
+        for name, model in self.models.items():
+            filepath = os.path.join(models_path, model.filename)
+            content = self._get_source(model)
+
+            if model.is_new:
+                model_access.add(name, "base.group_user", RIGHTS_FULL)
+
+            # Write model
+            with open(filepath, "w") as file:
+                file.write(content)
+
+            to_keep.append(filepath)
+            filenames.append(model.sql_name)
+
+        # Models init
+        filepath = self.save_init(models_path, filenames)
+        to_keep.append(filepath)
+
+        # Module init
+        filepath = self.save_init(self.path, ["models"])
+        to_keep.append(filepath)
+
+        # Manifest
+        filepath = self.save_manifest()
+        to_keep.append(filepath)
+
+        print(model_access)
+        if not model_access.void:
+            model_access.save()
+            to_keep.append(model_access.filepath)
+
+        # Clean stage
         self.clean(to_keep)

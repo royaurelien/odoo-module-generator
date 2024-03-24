@@ -96,6 +96,10 @@ class ModelAccessHelper:
         self.ir_model_access = IrModelAccess()
 
     @property
+    def void(self):
+        return not bool(self.ir_model_access)
+
+    @property
     def filename(self):
         """Model access filename."""
         return os.path.join("security", IR_MODEL_ACCESS_FILENAME)
