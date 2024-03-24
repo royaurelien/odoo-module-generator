@@ -1,48 +1,39 @@
 import ast
+import astor
+import os
 
-from omg.common.tools import generate, get_arg, get_assign, get_keyword
-from omg.core.models import File
-from omg.odoo import OdooModel
+# from omg.common.tools import generate, get_arg, get_assign, get_keyword
+# from omg.core.models import File
 
-# , get_ast_source_segment
+
 from omg.odoo.field import Field
 from omg.common.logger import _logger
+from omg.common.node import Cleaner
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]
 
 
-def get_ast_source_segment(source, node):
-    # Adapted from https://github.com/python/cpython/blob/3.8/Lib/ast.py
-    try:
-        start = node.lineno - 1
-        end = node.end_lineno - 1
-        start_offset = node.col_offset
-        end_offset = node.end_col_offset
-    except AttributeError:
-        return None
-
-    lines = ast._splitlines_no_ff(source)
-    if end == start:
-        return lines[start].encode()[start_offset:end_offset].decode()
-
-    segment = [lines[start].encode()[start_offset:].decode()]
-    segment.extend(lines[start + 1 : end])
-    segment.append(lines[end].encode()[:end_offset].decode())
-
-    # _logger.warning(segment)
-
-    return "".join(segment)
-
-
-class Model(OdooModel):
+class Model:
     def __init__(self, name=None, inherit=None, inherits=None, fields=None, funcs=None):
-        super().__init__(name, inherit, inherits, fields, funcs)
-        self.ttype = None
+        self.name = name
+        self._obj = None
+        self.inherit = set(inherit or [])
+        self.inherits = inherits or {}
+        self.fields = fields or {}
+        self.funcs = funcs or {}
+
+    @property
+    def _name(self):
+        return list(self.inherit)[0] if self.inherit and not self.name else self.name
 
     @property
     def is_stored(self) -> bool:
         return self.ttype == "Model"
+
+    @property
+    def is_new(self) -> bool:
+        return self.name and not self.inherit
 
     @property
     def has_fields(self) -> bool:
@@ -50,64 +41,21 @@ class Model(OdooModel):
 
     @property
     def filename(self) -> str:
-        return self.name.replace(".", "_")
+        return self._name.replace(".", "_") + ".py"
 
     @property
     def classname(self) -> str:
-        return "".join(map(str.capitalize, self.name.split(".")))
+        return "".join(map(str.capitalize, self._name.split(".")))
 
-    @classmethod
-    def from_ast(cls, obj: ast.ClassDef, content: str) -> "Model":
-        model = super().from_ast(obj, content)
+    @property
+    def ttype(self):
+        base = self._obj.bases[0]
+        return ".".join([base.value.id, base.attr])
 
-        # Attribute(value=Name(id='models', ctx=Load()), attr='Model', ctx=Load())
-        # Name(id='RPC', ctx=Load())
-        # Attribute(value=Name(id='models', ctx=Load()), attr='TransientModel', ctx=Load())
-
-        ttype = None
-        for child in obj.bases:
-            if isinstance(child, ast.Attribute) and isinstance(child.value, ast.Name):
-                ttype = child.attr
-                break
-            if isinstance(child, ast.Name):
-                ttype = child.id
-                break
-
-        model.ttype = ttype
-
-        return model
-
-    @classmethod
-    def field_from_string(cls, content) -> Field:
-        obj = get_assign(content)
-        model = Model("test.test")
-        model._parse_assign(obj, content)
-
-        return model.fields[next(iter(model.fields))]
-
-    def generate(self) -> File:
-        filepath = f"models/{self.filename}"
-        inherit = self.name if self.inherit and self.name in self.inherit else False
-
-        vals = {
-            "name": self.name,
-            "classname": self.classname,
-            "fields": list(
-                map(
-                    lambda field: field.get_definition(keywords=False),
-                    self.fields.values(),
-                )
-            ),
-        }
-
-        if inherit:
-            vals["inherit"] = inherit
-
-        return generate("model.jinja2", vals, filepath)
+    def __repr__(self) -> str:
+        return f"<Model: {self.name}>"
 
     def _parse_assign(self, obj: ast.Assign, content: str) -> None:
-        """Overrided to replace Field"""
-
         assignments = [k.id for k in obj.targets if isinstance(k, ast.Name)]
         if len(assignments) != 1:
             return
@@ -131,27 +79,32 @@ class Model(OdooModel):
             inhs = ast.literal_eval(value)
             if isinstance(inhs, dict):
                 self.inherits.update(inhs)
-                self.fields.update({k: Field("fields.Many2one") for k in inhs.values()})
-        elif isinstance(value, ast.Call):
-            f = value.func
-            if not isinstance(f, ast.Attribute) or not isinstance(f.value, ast.Name):
-                return
+                # self.fields.update({k: Field("fields.Many2one") for k in inhs.values()})
 
-            if f.value.id == "fields":
+    @classmethod
+    def from_ast(cls, obj: ast.ClassDef, content: str) -> "Model":
 
-                res = ast.unparse(obj)
-                # res = ast.literal_eval(value)
-                _logger.error("res=\n%s", res)
-                # ttype = f.attr
-                # Store args and keywords
-                args = list(map(get_arg, value.args))
-                keywords = dict(map(get_keyword, value.keywords))
+        model = cls()
+        for child in obj.body:
+            if isinstance(child, ast.Assign):
+                model._parse_assign(child, content)
 
-                definition = get_ast_source_segment(content, value)
-                self.fields[assign] = Field(
-                    f"fields.{f.attr}",
-                    definition,
-                    args=args,
-                    keywords=keywords,
-                    name=assign,
-                )
+        # Force classname to CamelCase
+        obj.name = model.classname
+
+        model._obj = obj
+
+        return model
+
+    def export(self, module_path):
+        content = astor.to_source(self._obj)
+        path = os.path.join(module_path, "models")
+        filepath = os.path.join(path, self.filename)
+
+        os.makedirs(path, exist_ok=True)
+
+        with open(filepath, "w") as file:
+            file.write(content)
+
+        print(filepath)
+        print(content)

@@ -28,6 +28,43 @@ TEMPLATE_DIR = os.path.abspath("omg/static/templates/old/")
 File = namedtuple("File", ["name", "path", "content"])
 
 
+def fix_indentation(filepath):
+    """Fixes the indentation of a file"""
+    result = False
+    with open(filepath, "r+", encoding="utf-8") as fp:
+        buf = fp.read()
+
+    with open(filepath, "w+", encoding="utf-8") as fp:
+        for line in buf.splitlines():
+            left = ""
+            for c in line:
+                if c == " ":
+                    left += c
+                elif c == "\t":
+                    left += " " * (4 - len(left) % 4)
+                    result = True
+                else:
+                    break
+            fp.write(f"{left}{line.strip()}\n")
+
+    return result
+
+
+def try_automatic_port(filepath):
+    """Tries to port a python 2 script to python 3 using 2to3"""
+    cmd = shutil.which("2to3")
+    if cmd is None:
+        return False
+
+    with subprocess.Popen(
+        [cmd, "-n", "-w", filepath],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as proc:
+        proc.communicate()
+    return True
+
+
 def generate(template: str, data: dict, filename: str, functions=None) -> File:
     code = generate_code(template, data, functions)
     file = generate_file(filename, code)
