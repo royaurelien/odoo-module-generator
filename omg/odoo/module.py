@@ -13,38 +13,21 @@ from omg.common.logger import _logger
 from omg.odoo.model import Model
 from omg.core.models import Manifest
 from omg.common.render import ModelAccessHelper, RIGHTS_FULL
-from omg.common.tools import fix_indentation, try_automatic_port, save_to
+from omg.common.tools import fix_indentation, try_automatic_port, save_code
 
-from omg.common.node import Cleaner
+from omg.common.node import Cleaner, is_model
 from omg.core.settings import get_settings
 
 settings = get_settings()  # pylint: disable=C0413
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 ODOO_MODELS = ["models", "Model", "AbstractModel", "TransientModel"]
-
-
-def is_model(obj):
-    if not obj.bases:
-        return False
-
-    base = obj.bases[0]
-
-    if isinstance(base, ast.Name):
-        if base.id in ODOO_MODELS:
-            return True
-
-    if isinstance(base, ast.Attribute):
-        # bases=[Attribute(value=Name(id='models'), attr='Model')],
-        if base.value.id in ODOO_MODELS or base.attr in ODOO_MODELS[1:]:
-            return True
-
-    return False
+EXCLUDE_FOLDERS = ["report", "controller", "controllers", "wizard", "wizards"]
 
 
 class Module:
 
-    def __init__(self, path):
+    def __init__(self, path: str):
         self.path = path
         self.name = os.path.basename(path[:-1] if path.endswith("/") else path)
         self.manifest = {}
@@ -56,18 +39,16 @@ class Module:
     def __repr__(self) -> str:
         return f"<Module ({self.name}): {self.path}>"
 
-    def _parse_manifest(self, path):
+    def _parse_manifest(self, path: str) -> None:
+        # odoo_analyse
         with open(path, encoding="utf-8") as fp:
             obj = ast.literal_eval(fp.read())
             if isinstance(obj, dict):
                 # self.update(depends=obj.get("depends", []), files=obj.get("data", []))
                 self.manifest.update(obj)
 
-    # def _load_python(self, path, filename):
-    #     filepath = os.path.join(path, filename)
-    #     return astor.code_to_ast.parse_file(filepath)
-
-    def _load_python(self, path, filename):
+    def _load_python(self, path: str, filename: str) -> None:
+        # odoo_analyse
         def parse_python(filepath, version=None):
             with open(filepath, encoding="utf-8") as fp:
                 data = fp.read()
@@ -110,19 +91,7 @@ class Module:
         _logger.error(f"Not parsable {filepath}: {exc}")
         raise exc
 
-    # def _parse_class_def(self, obj: ast.ClassDef, content: str) -> None:
-    #     model = Model.from_ast(obj, content)
-    #     if not model.is_model():
-    #         self.classes[model.name] = model
-    #         return
-
-    #     if model._name in self.models:
-    #         self.models[model._name].update(model)
-    #     else:
-    #         self.models[model._name] = model
-
     def _parse_model(self, obj: ast.ClassDef, content: str) -> None:
-
         cleaner = Cleaner()
         obj = cleaner.visit(obj)
 
@@ -133,14 +102,14 @@ class Module:
         else:
             self.models[model._name] = model
 
-    def _parse_python(self, path, filename):
-        exclude = ["report", "controller", "controllers", "wizard", "wizards"]
+    def _parse_python(self, path: str, filename: str) -> None:
+        # odoo_analyse
 
         if path + filename in self.files:
             return
 
         folder = os.path.basename(path)
-        if folder in exclude:
+        if folder in EXCLUDE_FOLDERS:
             return
 
         obj = self._load_python(path, filename)
@@ -164,12 +133,9 @@ class Module:
             if isinstance(child, ast.ClassDef):
                 if not is_model(child):
                     # TODO: parse class
-                    # print(f"class {name}")
                     pass
                 else:
                     self._parse_model(child, content)
-
-                # self._parse_class_def(child, content)
 
         patterns = ["odoo.addons.", "openerp.addons."]
         for imp in imports:
@@ -197,13 +163,10 @@ class Module:
                     break
 
     @classmethod
-    def from_path(cls, path, **config):  # noqa: C901
-        parent_path = str(Path(path).parent.absolute())
-        # _logger.warning("parent path: %s", parent_path)
-        # files_list = []
-        # analyse_start = time.time()
-        module = cls(path)
+    def from_path(cls, path, **config) -> "Module":  # noqa: C901
+        # odoo_analyse
 
+        module = cls(path)
         found_init, found_manifest = False, False
 
         if not path.endswith("/"):
@@ -232,10 +195,9 @@ class Module:
         return module
 
     @classmethod
-    def _find_modules(cls, path):
+    def _find_modules(cls, path: str):
         blacklist = []
         path = path.strip()
-        # _logger.warning("path: %s", path)
 
         try:
             module = cls.from_path(path)
@@ -251,46 +213,41 @@ class Module:
             sub_paths = [
                 os.path.join(path, p) for p in os.listdir(path) if p not in blacklist
             ]
-            # _logger.warning("path: %s", sub_paths)
             for new_path in filter(os.path.isdir, sub_paths):
                 yield from cls._find_modules(new_path)
 
     @classmethod
-    def find_modules(cls, path):
+    def find_modules(cls, path: str):
         result = {}
         for key, value in cls._find_modules(path):
             result[key] = value
 
         return result
 
-    def fields_matrix(self):
+    def fields_matrix(self) -> dict:
         res = {}
         for model in self.models.values():
             res[model.sql_name] = model.fields_matrix()
 
         return res
 
-    def _get_default_imports(self):
+    def _get_default_imports(self) -> "ast.ImportFrom":
         names = [ast.alias(name=name) for name in ["fields", "models"]]
         return ast.ImportFrom("odoo", names, 0)
 
-    def _get_source(self, model):
+    def _get_source(self, model: "Model") -> str:
         imports = self._get_default_imports()
         tree = ast.Module(body=[imports, model._obj])
         return astor.to_source(tree)
 
-    def _generate_init(self, modules):
+    def _generate_init(self, modules: list) -> str:
+
         imports = [ast.ImportFrom(".", [ast.alias(name=name)], 0) for name in modules]
         tree = ast.Module(body=imports)
         return astor.to_source(tree)
 
-    def _list_files(self) -> set:
-        return set(str(f.absolute()) for f in Path(self.path).iterdir() if f.is_file())
-
-    def _list_directories(self) -> set:
-        return set(str(f.absolute()) for f in Path(self.path).iterdir() if f.is_dir())
-
-    def clean(self, exclude_files=[], exclude_dirs=["models"]):
+    def clean(self, exclude_files: list = [], exclude_dirs: list = ["models"]) -> None:
+        """Clean module"""
 
         files = set(
             str(f.absolute()) for f in Path(self.path).rglob("*") if f.is_file()
@@ -301,7 +258,6 @@ class Module:
             for f in Path(self.path).rglob("*")
             if f.is_dir() and f.name not in exclude_dirs
         )
-        print(dirs)
 
         for filepath in files:
             os.remove(filepath)
@@ -310,15 +266,15 @@ class Module:
             if os.path.exists(path) and len(os.listdir(path)) == 0:
                 shutil.rmtree(path)
 
-    def save_init(self, path, modules):
+    def save_init(self, path: str, modules: list) -> str:
         filepath = os.path.join(path, "__init__.py")
         content = self._generate_init(modules)
 
-        save_to(content, filepath, mode="w", header=True)
+        save_code(content, filepath)
 
         return filepath
 
-    def save_manifest(self):
+    def save_manifest(self) -> str:
         filepath = os.path.join(self.path, "__manifest__.py")
 
         vals = settings.default_manifest.dict()
@@ -328,11 +284,11 @@ class Module:
         manifest.data = []
         content = manifest.prepare_to_save()
 
-        save_to(content, filepath, mode="w", header=True)
+        save_code(content, filepath)
 
         return filepath
 
-    def write(self):
+    def write(self) -> None:
         to_keep = []
         modules = []
         models_path = os.path.join(self.path, "models")
@@ -348,7 +304,7 @@ class Module:
                 model_access.add(name, "base.group_user", RIGHTS_FULL)
 
             # Write model
-            save_to(content, filepath, mode="w", header=True, code=True)
+            save_code(content, filepath)
             to_keep.append(filepath)
             modules.append(model.sql_name)
 

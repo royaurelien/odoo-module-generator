@@ -5,6 +5,24 @@ ODOO_MODELS = ["models", "Model", "AbstractModel", "TransientModel"]
 EXCLUDE_KEYWORDS = ["default", "compute", "store", "tracking", "readonly"]
 
 
+def is_model(obj):
+    if not obj.bases:
+        return False
+
+    base = obj.bases[0]
+
+    if isinstance(base, ast.Name):
+        if base.id in ODOO_MODELS:
+            return True
+
+    if isinstance(base, ast.Attribute):
+        # bases=[Attribute(value=Name(id='models'), attr='Model')],
+        if base.value.id in ODOO_MODELS or base.attr in ODOO_MODELS[1:]:
+            return True
+
+    return False
+
+
 class GetFields(ast.NodeTransformer):
 
     def __init__(self):

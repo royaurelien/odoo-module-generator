@@ -245,6 +245,10 @@ def save_to(content, filepath, **kwargs):
         file.write(content)
 
 
+def save_code(content, filepath):
+    return save_to(content, filepath, mode="w", header=True, code=True)
+
+
 def abort_if_false(ctx, _, value):
     """Confirm: Abort if false."""
 
