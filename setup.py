@@ -36,13 +36,12 @@ setup(
         "jinja2>=3.1.1",
         "requests>=2.28.1",
         "gitpython>=3.1.27",
-        "odoo-analyse[graph]>=2.0.0",
     ],
     python_requires=">=3.8",
     extras_require={},
     entry_points={
         "console_scripts": [
-            "omg = omg.cli.main:cli",
+            "omg = omg.cli:cli",
         ],
     },
 )

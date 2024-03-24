@@ -35,6 +35,7 @@ class Module:
         self.imports = set()
         self.models = {}
         self.classes = {}
+        self.files_to_keep = set()
 
     def __repr__(self) -> str:
         return f"<Module ({self.name}): {self.path}>"
@@ -288,7 +289,7 @@ class Module:
 
         return filepath
 
-    def write(self) -> None:
+    def write(self, clean: bool = True) -> None:
         to_keep = []
         modules = []
         models_path = os.path.join(self.path, "models")
@@ -322,4 +323,5 @@ class Module:
             to_keep.append(model_access.filepath)
 
         # Clean stage
-        self.clean(to_keep)
+        if clean:
+            self.clean(to_keep)
