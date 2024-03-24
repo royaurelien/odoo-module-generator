@@ -12,6 +12,7 @@ from omg.core.models import DefaultQuestion, YesNoQuestion
 from omg.core.repository import Repository
 from omg.core.scaffold import ScaffoldModule, ScaffoldRepository, prompt_manifest
 from omg.odoo import Odoo  # noqa: E402
+from omg.core.git import Git
 
 # from omg.common.exceptions import ExternalCommandFailed
 
@@ -136,13 +137,25 @@ def update_manifest(path, **kwargs):
 @click.command()
 @click.argument("path")
 @click.option("--no-clean", "-n", is_flag=True, help="Preserve files")
-def codebase(path, no_clean: bool = False):
+@click.option("--commit", "-c", is_flag=True, help="Auto-commit")
+def codebase(path, no_clean: bool = False, commit: bool = False):
     """Generate code base from source."""
+
+    if commit:
+        git = Git(path)
+        branch = "codebase"
+        current_branch = git.branch()
+
+        if current_branch != branch:
+            git.checkout(branch)
 
     odoo = Odoo.load_path(path)
 
-    for module in odoo.modules.values():
+    for name, module in odoo.modules.items():
         module.write(not no_clean)
+
+        if commit:
+            git.commit(f"[IMP] {name}: codebase")
 
 
 @click.command()
