@@ -6,6 +6,7 @@ import sys
 import os
 from pathlib import Path
 from functools import partial
+import pathlib
 
 from omg.common.logger import _logger
 from omg.odoo.model import Model
@@ -39,7 +40,7 @@ class Module:
 
     def __init__(self, path):
         self.path = path
-        self.name = os.path.basename(path)
+        self.name = os.path.basename(path[:-1] if path.endswith("/") else path)
         self.manifest = {}
         self.files = set()
         self.imports = set()
@@ -56,11 +57,11 @@ class Module:
                 # self.update(depends=obj.get("depends", []), files=obj.get("data", []))
                 self.manifest.update(obj)
 
-    def _load_python(self, path, filename):
-        filepath = os.path.join(path, filename)
-        return astor.code_to_ast.parse_file(filepath)
+    # def _load_python(self, path, filename):
+    #     filepath = os.path.join(path, filename)
+    #     return astor.code_to_ast.parse_file(filepath)
 
-    def _load_python_old(self, path, filename):
+    def _load_python(self, path, filename):
         def parse_python(filepath, version=None):
             with open(filepath, encoding="utf-8") as fp:
                 data = fp.read()
@@ -155,12 +156,11 @@ class Module:
 
         for child in obj.body:
             if isinstance(child, ast.ClassDef):
-                name = child.name
                 if not is_model(child):
+                    # TODO: parse class
                     # print(f"class {name}")
                     pass
                 else:
-                    # print(f"model {name}")
                     self._parse_model(child, content)
 
                 # self._parse_class_def(child, content)
@@ -219,16 +219,10 @@ class Module:
                 found_init = True
                 module._parse_python(path, f)
 
-                # imports = module._parse_init(path, f)
-                # _logger.error("Imports: %s", imports)
-
-                # for name in imports:
-                #     tmp = module._parse_init(path, name)
-                #     _logger.error("Imports from %s: %s", name, tmp)
-
         if not found_init:
             return None
 
+        _logger.info("Found module %s", module.name)
         return module
 
     @classmethod
@@ -279,8 +273,26 @@ class Module:
         tree = ast.Module(body=[imports, model._obj])
         return astor.to_source(tree)
 
+    def _list_files(self) -> set:
+        return set(str(f.absolute()) for f in pathlib.Path().iterdir() if f.is_file())
+
+    def _list_directories(self) -> set:
+        return set(str(f.absolute()) for f in pathlib.Path().iterdir() if f.is_dir())
+
+    def clean(self, keep_files):
+        files = self._list_files()
+        files = files - set(keep_files)
+
+        print(files)
+
+        for file in files:
+            os.remove(file)
+
     def write(self):
 
+        # _logger.error(self.files)
+
+        to_keep = []
         models_path = os.path.join(self.path, "models")
         os.makedirs(models_path, exist_ok=True)
 
@@ -288,6 +300,9 @@ class Module:
 
             filepath = os.path.join(models_path, model.filename)
             content = self._get_source(model)
+            to_keep.append(filepath)
 
             with open(filepath, "w") as file:
                 file.write(content)
+
+        self.clean(to_keep)
