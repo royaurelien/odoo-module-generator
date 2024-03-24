@@ -7,12 +7,17 @@ import os
 from pathlib import Path
 from functools import partial
 import pathlib
+import shutil
 
 from omg.common.logger import _logger
 from omg.odoo.model import Model
-from omg.common.tools import fix_indentation, try_automatic_port
+from omg.core.models import Manifest
+from omg.common.tools import fix_indentation, try_automatic_port, format_code
 
 from omg.common.node import Cleaner
+from omg.core.settings import get_settings
+
+settings = get_settings()  # pylint: disable=C0413
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 ODOO_MODELS = ["models", "Model", "AbstractModel", "TransientModel"]
@@ -273,26 +278,44 @@ class Module:
         tree = ast.Module(body=[imports, model._obj])
         return astor.to_source(tree)
 
+    def _generate_init(self, modules):
+        imports = [ast.ImportFrom(".", [ast.alias(name=name)], 0) for name in modules]
+        tree = ast.Module(body=imports)
+        return astor.to_source(tree)
+
     def _list_files(self) -> set:
-        return set(str(f.absolute()) for f in pathlib.Path().iterdir() if f.is_file())
+        return set(str(f.absolute()) for f in Path(self.path).iterdir() if f.is_file())
 
     def _list_directories(self) -> set:
-        return set(str(f.absolute()) for f in pathlib.Path().iterdir() if f.is_dir())
+        return set(str(f.absolute()) for f in Path(self.path).iterdir() if f.is_dir())
 
-    def clean(self, keep_files):
-        files = self._list_files()
-        files = files - set(keep_files)
+    def clean(self, exclude_files=[], exclude_dirs=["models"]):
 
+        files = set(
+            str(f.absolute()) for f in Path(self.path).rglob("*") if f.is_file()
+        ) - set(exclude_files)
         print(files)
 
-        for file in files:
-            os.remove(file)
+        dirs = set(
+            str(f.absolute())
+            for f in Path(self.path).rglob("*")
+            if f.is_dir() and f.name not in exclude_dirs
+        )
+        print(dirs)
+
+        for filepath in files:
+            os.remove(filepath)
+
+        for path in dirs:
+            if os.path.exists(path):
+                shutil.rmtree(path)
 
     def write(self):
 
         # _logger.error(self.files)
 
         to_keep = []
+        filenames = []
         models_path = os.path.join(self.path, "models")
         os.makedirs(models_path, exist_ok=True)
 
@@ -304,5 +327,33 @@ class Module:
 
             with open(filepath, "w") as file:
                 file.write(content)
+
+            filenames.append(model.sql_name)
+
+        # Init models
+        filepath = os.path.join(models_path, "__init__.py")
+        to_keep.append(filepath)
+        content = self._generate_init(filenames)
+        with open(filepath, "w") as file:
+            file.write(content)
+
+        # Init module
+        filepath = os.path.join(self.path, "__init__.py")
+        to_keep.append(filepath)
+        content = self._generate_init(["models"])
+        with open(filepath, "w") as file:
+            file.write(content)
+
+        filepath = os.path.join(self.path, "__manifest__.py")
+        to_keep.append(filepath)
+
+        vals = settings.default_manifest.dict()
+        vals.update({k: v for k, v in self.manifest.items() if v})
+
+        manifest = Manifest(**vals)
+        manifest.data = []
+        content = manifest.prepare_to_save()
+        with open(filepath, "w") as file:
+            file.write(format_code(content))
 
         self.clean(to_keep)
