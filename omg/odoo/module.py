@@ -137,7 +137,6 @@ class Module:
             return
 
         obj = self._load_python(path, filename)
-        _logger.warning(obj)
 
         with open(os.path.join(path, filename), encoding="utf-8") as fp:
             content = fp.read()
@@ -157,12 +156,11 @@ class Module:
         for child in obj.body:
             if isinstance(child, ast.ClassDef):
                 name = child.name
-                # print(name)
-                # print(child.bases)
                 if not is_model(child):
-                    print(f"class {name}")
+                    # print(f"class {name}")
+                    pass
                 else:
-                    print(f"model {name}")
+                    # print(f"model {name}")
                     self._parse_model(child, content)
 
                 # self._parse_class_def(child, content)
@@ -195,7 +193,7 @@ class Module:
     @classmethod
     def from_path(cls, path, **config):  # noqa: C901
         parent_path = str(Path(path).parent.absolute())
-        _logger.warning("parent path: %s", parent_path)
+        # _logger.warning("parent path: %s", parent_path)
         # files_list = []
         # analyse_start = time.time()
         module = cls(path)
@@ -237,7 +235,7 @@ class Module:
     def _find_modules(cls, path):
         blacklist = []
         path = path.strip()
-        _logger.warning("path: %s", path)
+        # _logger.warning("path: %s", path)
 
         try:
             module = cls.from_path(path)
@@ -253,7 +251,7 @@ class Module:
             sub_paths = [
                 os.path.join(path, p) for p in os.listdir(path) if p not in blacklist
             ]
-            _logger.warning("path: %s", sub_paths)
+            # _logger.warning("path: %s", sub_paths)
             for new_path in filter(os.path.isdir, sub_paths):
                 yield from cls._find_modules(new_path)
 
@@ -265,7 +263,31 @@ class Module:
 
         return result
 
+    def fields_matrix(self):
+        res = {}
+        for model in self.models.values():
+            res[model.sql_name] = model.fields_matrix()
+
+        return res
+
+    def _get_default_imports(self):
+        names = [ast.alias(name=name) for name in ["fields", "models"]]
+        return ast.ImportFrom("odoo", names, 0)
+
+    def _get_source(self, model):
+        imports = self._get_default_imports()
+        tree = ast.Module(body=[imports, model._obj])
+        return astor.to_source(tree)
+
     def write(self):
+
+        models_path = os.path.join(self.path, "models")
+        os.makedirs(models_path, exist_ok=True)
+
         for name, model in self.models.items():
-            print(name)
-            model.export(self.path)
+
+            filepath = os.path.join(models_path, model.filename)
+            content = self._get_source(model)
+
+            with open(filepath, "w") as file:
+                file.write(content)

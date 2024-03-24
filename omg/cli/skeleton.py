@@ -18,3 +18,5 @@ def skeleton(path):
 
     for name, module in odoo.modules.items():
         module.write()
+        # print(name)
+        # print(module.fields_matrix())

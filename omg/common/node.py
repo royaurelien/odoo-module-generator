@@ -2,6 +2,34 @@ import ast
 import astor
 
 ODOO_MODELS = ["models", "Model", "AbstractModel", "TransientModel"]
+EXCLUDE_KEYWORDS = ["default", "compute", "store", "tracking", "readonly"]
+
+
+class GetFields(ast.NodeTransformer):
+
+    def __init__(self):
+        self._fields_count = 0
+        self._fields = []
+
+    def visit_Assign(self, node):
+        assignments = [k.id for k in node.targets if isinstance(k, ast.Name)]
+        if len(assignments) != 1:
+            return node
+
+        assign, value = assignments[0], node.value
+        if not isinstance(value, ast.Call):
+            return node
+
+        f = value.func
+        if not isinstance(f, ast.Attribute) or not isinstance(f.value, ast.Name):
+            return node
+
+        if f.value.id != "fields":
+            return node
+
+        self._fields.append(assign)
+
+        return node
 
 
 class Cleaner(ast.NodeTransformer):
@@ -9,23 +37,14 @@ class Cleaner(ast.NodeTransformer):
     def __init__(self):
         self._arg_count = 0
         self._func = []
+        self._fields_count = 0
+        self._fields = []
 
     def visit_FunctionDef(self, node):
-        # node.name = "method_name"
-        # print(node.name)
         self.generic_visit(node)
-        # return node
         self._func.append(node)
 
         return
-
-    # def visit_arg(self, node):
-    #     print(node.arg)
-
-    #     node.arg = "arg_{}".format(self._arg_count)
-    #     self._arg_count += 1
-    #     self.generic_visit(node)
-    #     return node
 
     def visit_ClassDef(self, node):
         # Force class inherit to 'models.X'
@@ -38,16 +57,33 @@ class Cleaner(ast.NodeTransformer):
 
     def visit_Call(self, node):
 
-        if isinstance(node.func, (ast.Name, ast.Subscript)):
-            self.generic_visit(node)
+        # if isinstance(node.func, (ast.Name, ast.Subscript)):
+        #     self.generic_visit(node)
+        #     return node
+
+        if not isinstance(node.func, ast.Attribute):
             return node
 
-        # id = node.func.value.id
-        attr = node.func.attr
+        if not isinstance(node.func.value, ast.Name):
+            return node
 
-        keywords = [keyword.arg for keyword in node.keywords]
+        if node.func.value.id != "fields":
+            return node
+
+        keywords = {keyword.arg: keyword.value for keyword in node.keywords}
+        compute = keywords.pop("compute", False)
+        store = keywords.pop("store", False)
+
+        if compute and not store:
+            message = "Field previously unstored (lost value)"
+        elif compute and store:
+            message = "Field previously stored (retained value)"
+        else:
+            message = None
+            keywords.pop("help", None)
 
         if node.args:
+            attr = node.func.attr
             if len(node.args) == 1:
                 first_value = node.args.pop()
 
@@ -60,7 +96,7 @@ class Cleaner(ast.NodeTransformer):
                 else:
                     first_arg = "string"
 
-                node.keywords.append(ast.keyword(first_arg, first_value))
+                keywords[first_arg] = first_value
 
             elif len(node.args) == 2 and attr in ["Many2one", "Selection"]:
                 first_value = node.args.pop()
@@ -72,16 +108,23 @@ class Cleaner(ast.NodeTransformer):
                 elif attr in ["Selection"]:
                     first_arg = "selection"
                     second_arg = "string"
+                elif attr in ["One2many"]:
+                    if (
+                        "comodel_name" not in keywords
+                        and "inverse_name" not in keywords
+                    ):
+                        first_arg = "comodel_name"
+                        second_arg = "inverse_name"
 
-                node.keywords.append(ast.keyword(first_arg, first_value))
-                node.keywords.append(ast.keyword(second_arg, second_value))
+                keywords[first_arg] = first_value
+                keywords[second_arg] = second_value
 
-        exclude = ["default", "compute", "help", "store"]
+        if message:
+            keywords["help"] = ast.Constant(message)
+
         node.keywords = [
-            keyword for keyword in node.keywords if keyword.arg not in exclude
+            ast.keyword(k, v) for k, v in keywords.items() if k not in EXCLUDE_KEYWORDS
         ]
 
         self.generic_visit(node)
-        # print(astor.dump_tree(node))
-        # print(astor.to_source(node))
         return node

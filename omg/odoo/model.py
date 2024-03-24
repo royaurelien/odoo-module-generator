@@ -8,7 +8,7 @@ import os
 
 from omg.odoo.field import Field
 from omg.common.logger import _logger
-from omg.common.node import Cleaner
+from omg.common.node import Cleaner, GetFields
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]
@@ -46,6 +46,10 @@ class Model:
     @property
     def classname(self) -> str:
         return "".join(map(str.capitalize, self._name.split(".")))
+
+    @property
+    def sql_name(self) -> str:
+        return "_".join(self._name.split("."))
 
     @property
     def ttype(self):
@@ -96,15 +100,14 @@ class Model:
 
         return model
 
-    def export(self, module_path):
-        content = astor.to_source(self._obj)
-        path = os.path.join(module_path, "models")
-        filepath = os.path.join(path, self.filename)
+    def _get_fields(self):
+        fields = GetFields()
+        fields.visit(self._obj)
 
-        os.makedirs(path, exist_ok=True)
+        return fields._fields
 
-        with open(filepath, "w") as file:
-            file.write(content)
+    def fields_matrix(self):
+        return {k: "" for k in self._get_fields()}
 
-        print(filepath)
-        print(content)
+    def export(self):
+        return astor.to_source(self._obj)
