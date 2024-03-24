@@ -3,6 +3,7 @@ from io import StringIO
 import json
 import sys
 import asyncio
+import ast
 
 # import odoo_analyse
 from odoo_analyse import Odoo as OOdoo
@@ -10,7 +11,7 @@ from odoo_analyse import Module as OdooModule
 from odoo_analyse import Model as OdooModel
 from odoo_analyse.field import Field as OdooField
 
-from odoo_analyse.utils import get_ast_source_segment
+# from odoo_analyse.utils import get_ast_source_segment
 
 from omg.odoo.module import Module
 from omg.odoo.model import Model
@@ -25,7 +26,7 @@ __all__ = [
     "Module",
     "Model",
     "Field",
-    "get_ast_source_segment",
+    # "get_ast_source_segment",
 ]
 
 

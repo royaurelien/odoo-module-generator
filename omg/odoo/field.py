@@ -1,12 +1,11 @@
 from omg.common.tools import dict_to_list
 from omg.odoo import OdooField
 
-# from omg.common.logger import _logger
+from omg.common.logger import _logger
 
 
 class Field(OdooField):
-    def __init__(self, name: str, ttype: str, definition: str = None, **kwargs: dict):
-        self.name = name
+    def __init__(self, ttype: str, definition: str = None, **kwargs: dict):
         self.ttype = ttype
         self.definition = definition
         self.args = []
@@ -15,6 +14,16 @@ class Field(OdooField):
         # args, keywords
         self.__dict__.update(kwargs)
         self.sanitize()
+
+    # def to_json(self) -> dict:
+    #     return {
+    #         "ttype": self.ttype,
+    #         "definition": self.definition,
+    #     }
+
+    # @classmethod
+    # def from_json(cls, data: dict) -> "Field":
+    #     return Field(data["ttype"], data.get("definition"))
 
     def __repr__(self) -> str:
         return f"<Field ({self.ttype}): {self.name}>"
@@ -25,6 +34,8 @@ class Field(OdooField):
 
         ttype, args = self.ttype, self.args
         vals = None
+
+        _logger.warning("args: %s", args)
 
         if ttype in ["Many2one"]:
             if len(args) == 1:

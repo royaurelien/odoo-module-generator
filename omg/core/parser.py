@@ -19,20 +19,18 @@ class Parser:
         self._odoo = None
 
     @classmethod
-    def from_path(cls, path, modules=None):
+    def from_path(cls, path: str, modules: list = []):
         self = cls(path)
 
         if modules and not isinstance(modules, list):
             modules = list(set(map(str.strip, modules.split(","))))
 
-        odoo = Odoo.from_path(path)
+        self._odoo = Odoo.from_path(path)
 
-        for k, v in odoo.modules.items():
+        for k, v in self._odoo.modules.items():
             if modules and v.name not in modules:
                 continue
             self.modules[k] = v
-
-        self._odoo = odoo
 
         return self
 
@@ -63,8 +61,11 @@ class Parser:
                 with open(filepath, "w") as f:
                     f.write(file.content)
 
-    def write(self, root_path):
-        os.makedirs(root_path, exist_ok=True)
+    def write(self, root_path=None):
+        if not root_path:
+            root_path = self.path
+        else:
+            os.makedirs(root_path, exist_ok=True)
 
         for name, module in self.modules.items():
             module_path = os.path.join(root_path, name)
@@ -72,19 +73,19 @@ class Parser:
 
             files = module.skeleton()
 
-            shutil.rmtree(module_path)
-            os.makedirs(module_path)
+            # shutil.rmtree(module_path)
+            # os.makedirs(module_path)
 
-            for file in files.values():
-                filepath = os.path.join(module_path, file.path)
-                parts, filename = os.path.split(file.path)
+            # for file in files.values():
+            #     filepath = os.path.join(module_path, file.path)
+            #     parts, filename = os.path.split(file.path)
 
-                if parts:
-                    dirs = os.path.join(module_path, parts)
-                    os.makedirs(dirs, exist_ok=True)
+            #     if parts:
+            #         dirs = os.path.join(module_path, parts)
+            #         os.makedirs(dirs, exist_ok=True)
 
-                with open(filepath, "w") as f:
-                    f.write(file.content)
+            #     with open(filepath, "w") as f:
+            #         f.write(file.content)
 
     def analyze(self):
         output = StringIO()

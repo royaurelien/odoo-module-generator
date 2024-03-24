@@ -17,9 +17,9 @@ settings = get_settings()  # pylint: disable=C0413
 
 @click.command()
 @click.argument("path")
-@click.argument("output")
-def generate(path, output):
+# @click.argument("output")
+def generate(path):
     """Generate level-1 base code from source."""
 
     parser = Parser.from_path(path)
-    parser.write(output)
+    parser.write()

@@ -36,7 +36,7 @@ def generate(template: str, data: dict, filename: str, functions=None) -> File:
 
 
 def generate_code(template: str, data: dict, functions=None) -> str:
-    _logger.error(TEMPLATE_DIR)
+    # _logger.error(TEMPLATE_DIR)
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
     jinja_template = jinja_env.get_template(template)
 
@@ -144,7 +144,7 @@ def find_modules(path):
     # path = get_absolute_path(path)
     modules = list(pkgutil.walk_packages([path]))
 
-    _logger.warning(modules)
+    # _logger.warning(modules)
 
     # Is path a package?
     res = [

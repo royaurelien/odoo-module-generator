@@ -2,15 +2,37 @@ import ast
 
 from omg.common.tools import generate, get_arg, get_assign, get_keyword
 from omg.core.models import File
-from omg.odoo import OdooModel, get_ast_source_segment
+from omg.odoo import OdooModel
 
-# from odoo_analyse.utils import get_ast_source_segment
+# , get_ast_source_segment
 from omg.odoo.field import Field
+from omg.common.logger import _logger
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]
 
-# from omg.common.logger import _logger
+
+def get_ast_source_segment(source, node):
+    # Adapted from https://github.com/python/cpython/blob/3.8/Lib/ast.py
+    try:
+        start = node.lineno - 1
+        end = node.end_lineno - 1
+        start_offset = node.col_offset
+        end_offset = node.end_col_offset
+    except AttributeError:
+        return None
+
+    lines = ast._splitlines_no_ff(source)
+    if end == start:
+        return lines[start].encode()[start_offset:end_offset].decode()
+
+    segment = [lines[start].encode()[start_offset:].decode()]
+    segment.extend(lines[start + 1 : end])
+    segment.append(lines[end].encode()[:end_offset].decode())
+
+    # _logger.warning(segment)
+
+    return "".join(segment)
 
 
 class Model(OdooModel):
@@ -109,24 +131,27 @@ class Model(OdooModel):
             inhs = ast.literal_eval(value)
             if isinstance(inhs, dict):
                 self.inherits.update(inhs)
-                self.fields.update({k: Field(k, "Many2one") for k in inhs.values()})
+                self.fields.update({k: Field("fields.Many2one") for k in inhs.values()})
         elif isinstance(value, ast.Call):
             f = value.func
             if not isinstance(f, ast.Attribute) or not isinstance(f.value, ast.Name):
                 return
 
             if f.value.id == "fields":
-                ttype = f.attr
-                definition = get_ast_source_segment(content, value)
 
+                res = ast.unparse(obj)
+                # res = ast.literal_eval(value)
+                _logger.error("res=\n%s", res)
+                # ttype = f.attr
                 # Store args and keywords
                 args = list(map(get_arg, value.args))
                 keywords = dict(map(get_keyword, value.keywords))
 
+                definition = get_ast_source_segment(content, value)
                 self.fields[assign] = Field(
-                    assign,
-                    ttype,
+                    f"fields.{f.attr}",
                     definition,
                     args=args,
                     keywords=keywords,
+                    name=assign,
                 )
