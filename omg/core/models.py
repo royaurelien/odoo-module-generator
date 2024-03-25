@@ -125,6 +125,7 @@ class Manifest(DefaultManifest):
         "name",
         "description",
         "summary",
+        "version",
         "category",
         "author",
         "mainteners",
@@ -173,8 +174,8 @@ class Manifest(DefaultManifest):
 
     def set_version(self, version):
         parts = version.split(".")
-        self.odoo_version = parts[:1]
-        self.module_version = parts[2:]
+        self.odoo_version = ".".join(parts[:2])
+        self.module_version = ".".join(parts[2:])
 
     def add_items(self, key, value):
         """Add items to list fields."""
