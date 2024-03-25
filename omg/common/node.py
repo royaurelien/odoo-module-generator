@@ -112,7 +112,7 @@ class Cleaner(ast.NodeTransformer):
 
                 keywords[first_arg] = first_value
 
-            elif len(node.args) == 2 and attr in ["Many2one", "Selection"]:
+            elif len(node.args) == 2 and attr in ["Many2one", "Selection", "One2many"]:
                 first_value = node.args.pop()
                 second_value = node.args.pop()
 
