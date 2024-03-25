@@ -1,5 +1,4 @@
 import ast
-import astor
 
 ODOO_MODELS = ["models", "Model", "AbstractModel", "TransientModel"]
 EXCLUDE_KEYWORDS = ["default", "compute", "store", "tracking", "readonly"]
@@ -24,7 +23,6 @@ def is_model(obj):
 
 
 class GetFields(ast.NodeTransformer):
-
     def __init__(self):
         self._fields_count = 0
         self._fields = []
@@ -51,7 +49,6 @@ class GetFields(ast.NodeTransformer):
 
 
 class Cleaner(ast.NodeTransformer):
-
     def __init__(self):
         self._arg_count = 0
         self._func = []
@@ -73,8 +70,7 @@ class Cleaner(ast.NodeTransformer):
         self.generic_visit(node)
         return node
 
-    def visit_Call(self, node):
-
+    def visit_Call(self, node):  # noqa: C901
         # if isinstance(node.func, (ast.Name, ast.Subscript)):
         #     self.generic_visit(node)
         #     return node

@@ -1,18 +1,19 @@
 # pylint: disable=C0411
-import os
-import click
 import ast
+import os
 import sys
 
-from omg.core.settings import get_settings
+import click
+
+from omg.common.exceptions import ExternalCommandFailed
 from omg.common.logger import _logger
 from omg.common.tools import copy_file, find_modules, get_absolute_path, save_to
-from omg.common.exceptions import ExternalCommandFailed
+from omg.core.git import Git
 from omg.core.models import DefaultQuestion, YesNoQuestion
 from omg.core.repository import Repository
 from omg.core.scaffold import ScaffoldModule, ScaffoldRepository, prompt_manifest
+from omg.core.settings import get_settings
 from omg.odoo import Odoo  # noqa: E402
-from omg.core.git import Git
 
 # from omg.common.exceptions import ExternalCommandFailed
 
@@ -175,7 +176,7 @@ def codebase(
 def skeleton(path):
     """Transform to skeleton module."""
 
-    odoo = Odoo.load_path(path)
+    Odoo.load_path(path)
 
 
 scaffold.add_command(scaffold_repository)

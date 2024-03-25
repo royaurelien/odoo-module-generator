@@ -1,5 +1,6 @@
-import subprocess
 import shlex
+import subprocess
+
 from omg.common.logger import _logger
 
 

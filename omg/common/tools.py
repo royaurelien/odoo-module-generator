@@ -24,7 +24,7 @@ DEFAULT_TIMEOUT = 60
 MANIFEST_FILENAME = "__manifest__.py"
 TEMPLATE_DIR = os.path.abspath("omg/static/templates/old/")
 
-HEADER = """
+HEADER = r"""
 #
 #      ____  __  __  _____
 #     / __ \|  \/  |/ ____|

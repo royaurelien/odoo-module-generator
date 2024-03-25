@@ -1,12 +1,4 @@
-from io import StringIO
-import json
-import sys
-import asyncio
-import ast
-
 from omg.odoo.module import Module
-
-from omg.common.logger import _logger
 
 
 class Odoo:

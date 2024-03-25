@@ -1,23 +1,20 @@
 import ast
-import astor
-import time
-import tempfile
-import sys
 import os
-from pathlib import Path
-from functools import partial
-import pathlib
 import shutil
+import sys
+import tempfile
+from functools import partial
+from pathlib import Path
+
+import astor
 
 from omg.common.logger import _logger
-from omg.odoo.model import Model
-from omg.core.models import Manifest
-from omg.common.render import ModelAccessHelper, RIGHTS_FULL
-from omg.common.tools import fix_indentation, try_automatic_port, save_code
-from omg.common.render import render
-
 from omg.common.node import Cleaner, is_model
+from omg.common.render import RIGHTS_FULL, ModelAccessHelper, render
+from omg.common.tools import fix_indentation, save_code, try_automatic_port
+from omg.core.models import Manifest
 from omg.core.settings import get_settings
+from omg.odoo.model import Model
 
 settings = get_settings()  # pylint: disable=C0413
 
@@ -27,7 +24,6 @@ EXCLUDE_FOLDERS = ["report", "controller", "controllers", "wizard", "wizards"]
 
 
 class Module:
-
     def __init__(self, path: str, version: str = ""):
         self.path = path
         self.name = os.path.basename(path[:-1] if path.endswith("/") else path)
@@ -66,7 +62,7 @@ class Module:
 
         def port_fix_file(filepath):
             with tempfile.NamedTemporaryFile("w+") as tmp:
-                with open(filepath, "r", encoding="utf-8") as fp:
+                with open(filepath, encoding="utf-8") as fp:
                     tmp.file.write(fp.read())
                 if try_automatic_port(tmp.name):
                     _logger.warning("Ported %s", filepath)
@@ -105,7 +101,7 @@ class Module:
         else:
             self.models[model._name] = model
 
-    def _parse_python(self, path: str, filename: str) -> None:
+    def _parse_python(self, path: str, filename: str) -> None:  # noqa: C901
         # odoo_analyse
 
         if path + filename in self.files:
@@ -249,7 +245,6 @@ class Module:
         return astor.to_source(tree)
 
     def _generate_init(self, modules: list) -> str:
-
         imports = [ast.ImportFrom(".", [ast.alias(name=name)], 0) for name in modules]
         tree = ast.Module(body=imports)
         return astor.to_source(tree)
@@ -257,15 +252,15 @@ class Module:
     def clean(self, exclude_files: list = [], exclude_dirs: list = ["models"]) -> None:
         """Clean module"""
 
-        files = set(
+        files = {
             str(f.absolute()) for f in Path(self.path).rglob("*") if f.is_file()
-        ) - set(exclude_files)
+        } - set(exclude_files)
 
-        dirs = set(
+        dirs = {
             str(f.absolute())
             for f in Path(self.path).rglob("*")
             if f.is_dir() and f.name not in exclude_dirs
-        )
+        }
 
         for filepath in files:
             os.remove(filepath)

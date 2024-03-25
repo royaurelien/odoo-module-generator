@@ -1,7 +1,3 @@
-from omg.common.tools import dict_to_list
-from omg.common.logger import _logger
-
-
 class Field:
     def __init__(self, ttype: str, definition: str = None, **kwargs: dict):
         self.ttype = ttype

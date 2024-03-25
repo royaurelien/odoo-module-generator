@@ -1,14 +1,12 @@
 import ast
+
 import astor
-import os
+
+from omg.common.node import GetFields
 
 # from omg.common.tools import generate, get_arg, get_assign, get_keyword
 # from omg.core.models import File
 
-
-from omg.odoo.field import Field
-from omg.common.logger import _logger
-from omg.common.node import Cleaner, GetFields
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]
@@ -87,7 +85,6 @@ class Model:
 
     @classmethod
     def from_ast(cls, obj: ast.ClassDef, content: str) -> "Model":
-
         model = cls()
         for child in obj.body:
             if isinstance(child, ast.Assign):
