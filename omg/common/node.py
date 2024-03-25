@@ -125,8 +125,8 @@ class Cleaner(ast.NodeTransformer):
                 keywords[first_arg] = first_value
 
             elif len(node.args) == 2 and attr in ["Many2one", "Selection", "One2many"]:
-                first_value = node.args.pop()
-                second_value = node.args.pop()
+                first_value = node.args.pop(0)
+                second_value = node.args.pop(0)
 
                 if attr in ["Many2one"]:
                     first_arg = "comodel_name"
