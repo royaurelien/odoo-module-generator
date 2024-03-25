@@ -1,5 +1,9 @@
 import ast
 
+# import astor
+
+# from omg.common.logger import _logger
+
 ODOO_MODELS = ["models", "Model", "AbstractModel", "TransientModel"]
 EXCLUDE_KEYWORDS = ["default", "compute", "store", "tracking", "readonly"]
 
@@ -10,11 +14,19 @@ def is_model(obj):
 
     base = obj.bases[0]
 
+    # _logger.warning(astor.to_source(base))
+    # _logger.warning(astor.dump_tree(base))
+
     if isinstance(base, ast.Name):
         if base.id in ODOO_MODELS:
             return True
 
     if isinstance(base, ast.Attribute):
+        # FIXME: 3 parts or more
+        # tools.misc.UnquoteEvalContext
+        # Attribute(value=Attribute(value=Name(id='tools'), attr='misc'), attr='UnquoteEvalContext')
+        if isinstance(base.value, ast.Attribute):
+            return False
         # bases=[Attribute(value=Name(id='models'), attr='Model')],
         if base.value.id in ODOO_MODELS or base.attr in ODOO_MODELS[1:]:
             return True

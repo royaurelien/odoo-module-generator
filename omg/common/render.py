@@ -136,6 +136,9 @@ class ModelAccessHelper:
 
         fieldnames = IrModelAccess.header()
 
+        path = os.path.dirname(self.filepath)
+        os.makedirs(path, exist_ok=True)
+
         with open(self.filepath, "w", encoding=DEFAULT_ENCODING, newline="") as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()

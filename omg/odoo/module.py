@@ -34,6 +34,7 @@ class Module:
         self.classes = {}
         self.files_to_keep = set()
         self.version = version
+        self.status = set()
 
     def __repr__(self) -> str:
         return f"<Module ({self.name}): {self.path}>"
@@ -97,7 +98,9 @@ class Module:
         model = Model.from_ast(obj, content)
 
         if model._name in self.models:
-            self.models[model._name].update(model)
+            # FIXME: merge
+            # self.models[model._name].update(model)
+            pass
         else:
             self.models[model._name] = model
 
@@ -286,6 +289,7 @@ class Module:
         manifest = Manifest(**vals)
         manifest.set_version(self.version)
         manifest.data = data
+        manifest.demo = []
         content = manifest.prepare_to_save()
 
         save_code(content, filepath)
