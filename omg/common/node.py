@@ -5,7 +5,7 @@ import ast
 # from omg.common.logger import _logger
 
 ODOO_MODELS = ["models", "Model", "AbstractModel", "TransientModel"]
-EXCLUDE_KEYWORDS = ["default", "compute", "store", "tracking", "readonly"]
+EXCLUDE_KEYWORDS = ["default", "compute", "store", "tracking", "readonly", "required"]
 
 
 def is_model(obj):
