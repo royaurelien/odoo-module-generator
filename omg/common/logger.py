@@ -11,8 +11,9 @@ class LogConfig(BaseModel):
     """Logging configuration to be set for the server"""
 
     LOGGER_NAME: str = "app"
-    LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
-    LOG_LEVEL: str = os.getenv("OMG_LOG_LEVEL", "DEBUG")
+    # LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
+    LOG_FORMAT: str = "%(levelprefix)s | %(message)s"
+    LOG_LEVEL: str = os.getenv("OMG_LOG_LEVEL", "INFO")
 
     # Logging config
     version: int = 1
@@ -57,3 +58,6 @@ def logs(function):
         return output
 
     return wrapper
+
+
+__all__ = ["_logger", "logger", "logs"]

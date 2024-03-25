@@ -96,6 +96,10 @@ class ModelAccessHelper:
         self.ir_model_access = IrModelAccess()
 
     @property
+    def void(self):
+        return not bool(self.ir_model_access)
+
+    @property
     def filename(self):
         """Model access filename."""
         return os.path.join("security", IR_MODEL_ACCESS_FILENAME)
@@ -131,6 +135,9 @@ class ModelAccessHelper:
         """Save to ir.model.access.csv"""
 
         fieldnames = IrModelAccess.header()
+
+        path = os.path.dirname(self.filepath)
+        os.makedirs(path, exist_ok=True)
 
         with open(self.filepath, "w", encoding=DEFAULT_ENCODING, newline="") as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)

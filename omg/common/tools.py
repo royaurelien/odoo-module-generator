@@ -1,3 +1,4 @@
+import ast
 import json
 import mimetypes
 import os
@@ -6,9 +7,13 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+from collections import namedtuple
 
 import black
+import jinja2
 import requests
+from black.parsing import InvalidInput
+from jinja2.exceptions import UndefinedError
 from requests.exceptions import HTTPError
 
 from omg.common.exceptions import DownloadError
@@ -17,6 +22,167 @@ from omg.common.logger import _logger, logs
 DEFAULT_ENCODING = "utf8"
 DEFAULT_TIMEOUT = 60
 MANIFEST_FILENAME = "__manifest__.py"
+TEMPLATE_DIR = os.path.abspath("omg/static/templates/old/")
+
+HEADER = r"""
+#
+#      ____  __  __  _____
+#     / __ \|  \/  |/ ____|
+#    | |  | | \  / | |  __
+#    | |  | | |\/| | | |_ |
+#    | |__| | |  | | |__| |
+#     \____/|_|  |_|\_____|
+#
+#
+{}
+
+""".format
+
+
+File = namedtuple("File", ["name", "path", "content"])
+
+
+def fix_indentation(filepath):
+    """Fixes the indentation of a file"""
+    result = False
+    with open(filepath, "r+", encoding="utf-8") as fp:
+        buf = fp.read()
+
+    with open(filepath, "w+", encoding="utf-8") as fp:
+        for line in buf.splitlines():
+            left = ""
+            for c in line:
+                if c == " ":
+                    left += c
+                elif c == "\t":
+                    left += " " * (4 - len(left) % 4)
+                    result = True
+                else:
+                    break
+            fp.write(f"{left}{line.strip()}\n")
+
+    return result
+
+
+def try_automatic_port(filepath):
+    """Tries to port a python 2 script to python 3 using 2to3"""
+    cmd = shutil.which("2to3")
+    if cmd is None:
+        return False
+
+    with subprocess.Popen(
+        [cmd, "-n", "-w", filepath],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as proc:
+        proc.communicate()
+    return True
+
+
+def generate(template: str, data: dict, filename: str, functions=None) -> File:
+    code = generate_code(template, data, functions)
+    file = generate_file(filename, code)
+
+    return file
+
+
+def generate_code(template: str, data: dict, functions=None) -> str:
+    # _logger.error(TEMPLATE_DIR)
+    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
+    jinja_template = jinja_env.get_template(template)
+
+    if functions:
+        jinja_template.globals.update(functions)
+
+    try:
+        code = jinja_template.render(**data)
+        # code = format_str(code, mode=FileMode())
+    except UndefinedError as error:
+        _logger.error(error)
+        code = False
+    except InvalidInput as error:
+        _logger.error(error)
+        exit(1)
+
+    return code
+
+
+def generate_file(filename: str, content: str) -> File:
+    filepath = f"{filename}.py"
+
+    return File(name=filename, path=filepath, content=content)
+
+
+def get_assign(src):
+    def function(obj):
+        for child in obj.body:
+            if isinstance(child, ast.ClassDef):
+                return function(child)
+            if isinstance(child, ast.Assign):
+                return child
+
+    # src = format_str(src, mode=FileMode())
+    src = src.strip('"')
+    # print(src)
+    obj = ast.parse(src)
+    return function(obj)
+
+
+def get_arg(obj):
+    value = obj
+
+    if isinstance(value, ast.Constant):
+        value = value.value
+    elif isinstance(value, ast.List):
+        result = []
+
+        for child in value.elts:
+            res = []
+            if isinstance(child, ast.Tuple):
+                for cc in child.elts:
+                    if isinstance(cc, ast.Constant):
+                        res.append(cc.value)
+                        continue
+                    if isinstance(cc, ast.Call):
+                        tmp = f"{cc.func.id}({cc.args[0].value})"
+                        res.append(tmp)
+                        continue
+            result.append(res)
+        # print(result)
+        value = ast.dump(value)
+
+        # value = ast.literal_eval(value)
+
+        # print(value)
+        # exit(1)
+    # else:
+    #     print(type(obj))
+    #     exit(1)
+
+    # return f'"{value}"'
+    return value
+
+
+def get_keyword(obj):
+    name = obj.arg
+    value = obj.value
+
+    if isinstance(value, ast.Constant):
+        value = value.value
+
+    return (name, value)
+
+
+def dict_to_list(data, keys=None):
+    def function(item):
+        return f'{item}="{data[item]}"'
+
+    if keys:
+        items = filter(lambda x: x in keys, data)
+    else:
+        items = data
+
+    return list(map(function, items))
 
 
 def copy_file(source, destination):
@@ -29,7 +195,7 @@ def find_modules(path):
     # path = get_absolute_path(path)
     modules = list(pkgutil.walk_packages([path]))
 
-    _logger.warning(modules)
+    # _logger.warning(modules)
 
     # Is path a package?
     res = [
@@ -62,17 +228,25 @@ def save_to(content, filepath, **kwargs):
     """Save content to filepath."""
 
     code = bool(kwargs.get("code", False))
-    delete = bool(kwargs.get("code", False))
+    delete = bool(kwargs.get("delete", False))
+    header = bool(kwargs.get("header", False))
+    mode = kwargs.get("mode", "w+")
+
+    if header:
+        content = HEADER(content)
 
     if code:
         content = format_code(content)
 
-    if delete:
-        if os.path.exists(filepath):
-            os.remove(filepath)
+    if delete and os.path.exists(filepath):
+        os.remove(filepath)
 
-    with open(filepath, "w+", encoding=DEFAULT_ENCODING) as file:
+    with open(filepath, mode, encoding=DEFAULT_ENCODING) as file:
         file.write(content)
+
+
+def save_code(content, filepath):
+    return save_to(content, filepath, mode="w", header=True, code=True)
 
 
 def abort_if_false(ctx, _, value):

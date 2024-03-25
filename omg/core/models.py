@@ -1,4 +1,5 @@
-from collections import OrderedDict
+# from pydantic.functional_serializers import PlainSerializer
+from collections import OrderedDict, namedtuple
 from typing import List
 
 from pydantic import BaseModel, Field, ValidationError, computed_field
@@ -6,8 +7,10 @@ from pydantic.type_adapter import TypeAdapter
 
 from omg.common.logger import _logger
 
-# from pydantic.functional_serializers import PlainSerializer
-
+File = namedtuple(
+    "File",
+    ["name", "path", "content"],
+)
 
 BaseModel.model_config["protected_namespaces"] = ()
 
@@ -122,6 +125,7 @@ class Manifest(DefaultManifest):
         "name",
         "description",
         "summary",
+        "version",
         "category",
         "author",
         "mainteners",
@@ -167,6 +171,11 @@ class Manifest(DefaultManifest):
     def version(self):
         """Computed Odoo version."""
         return f"{self.odoo_version}.{self.module_version}"
+
+    def set_version(self, version):
+        parts = version.split(".")
+        self.odoo_version = ".".join(parts[:2])
+        self.module_version = ".".join(parts[2:])
 
     def add_items(self, key, value):
         """Add items to list fields."""
