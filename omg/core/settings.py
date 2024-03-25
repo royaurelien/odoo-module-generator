@@ -117,7 +117,7 @@ class Settings(BaseSettings):
         """Save settings to JSON file"""
 
         data = self.json()
-        _logger.debug(data)
+        # _logger.debug(data)
 
         filepath = apppath.config_filepath
 

@@ -14,6 +14,7 @@ from omg.odoo.model import Model
 from omg.core.models import Manifest
 from omg.common.render import ModelAccessHelper, RIGHTS_FULL
 from omg.common.tools import fix_indentation, try_automatic_port, save_code
+from omg.common.render import render
 
 from omg.common.node import Cleaner, is_model
 from omg.core.settings import get_settings
@@ -27,7 +28,7 @@ EXCLUDE_FOLDERS = ["report", "controller", "controllers", "wizard", "wizards"]
 
 class Module:
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, version: str = ""):
         self.path = path
         self.name = os.path.basename(path[:-1] if path.endswith("/") else path)
         self.manifest = {}
@@ -36,6 +37,7 @@ class Module:
         self.models = {}
         self.classes = {}
         self.files_to_keep = set()
+        self.version = version
 
     def __repr__(self) -> str:
         return f"<Module ({self.name}): {self.path}>"
@@ -225,6 +227,11 @@ class Module:
 
         return result
 
+    def set_version(self, version: str):
+        if len(version.split(".")) != 5:
+            raise ValueError("Version doesn't match expected format (17.0.x.y.z)")
+        self.version = version
+
     def fields_matrix(self) -> dict:
         res = {}
         for model in self.models.values():
@@ -275,14 +282,15 @@ class Module:
 
         return filepath
 
-    def save_manifest(self) -> str:
+    def save_manifest(self, data: list = []) -> str:
         filepath = os.path.join(self.path, "__manifest__.py")
 
         vals = settings.default_manifest.dict()
         vals.update({k: v for k, v in self.manifest.items() if v})
 
         manifest = Manifest(**vals)
-        manifest.data = []
+        manifest.set_version(self.version)
+        manifest.data = data
         content = manifest.prepare_to_save()
 
         save_code(content, filepath)
@@ -290,8 +298,7 @@ class Module:
         return filepath
 
     def write(self, clean: bool = True) -> None:
-        to_keep = []
-        modules = []
+        to_keep, modules, data = [], [], []
         models_path = os.path.join(self.path, "models")
         os.makedirs(models_path, exist_ok=True)
 
@@ -315,13 +322,28 @@ class Module:
         # Module init
         to_keep.append(self.save_init(self.path, ["models"]))
 
-        # Manifest
-        to_keep.append(self.save_manifest())
-
         if not model_access.void:
             model_access.save()
             to_keep.append(model_access.filepath)
+            data.append(model_access.filename)
+
+        # Manifest
+        to_keep.append(self.save_manifest(data))
 
         # Clean stage
         if clean:
             self.clean(to_keep)
+
+    def rename(self):
+        script = "pre-migrate.py"
+        migrations_path = os.path.join(self.path, "migrations")
+        version_path = os.path.join(migrations_path, self.version)
+        filepath = os.path.join(version_path, script)
+
+        os.makedirs(version_path, exist_ok=True)
+
+        template = f"module/{script}.jinja2"
+        vals = {"mapping": self.fields_matrix()}
+        content = render(template, data=vals)
+
+        save_code(content, filepath)

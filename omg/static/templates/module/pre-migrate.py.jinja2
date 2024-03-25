@@ -1,0 +1,17 @@
+import logging
+
+from odoo.tools.sql import column_exists, rename_column
+
+_logger = logging.getLogger("__name__")
+
+__FIELDS_MAPPING__ = {{ mapping }}
+
+
+def migrate(cr, version):
+    for model, fields in __FIELDS_MAPPING__.items():
+        for old_field, new_field in fields.items():
+            if not column_exists(cr, model, old_field):
+                continue
+
+            _logger.info("%s: Rename field %s -> %s", model, old_field, new_field)
+            rename_column(cr, model, old_field, new_field)

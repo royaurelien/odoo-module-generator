@@ -136,9 +136,17 @@ def update_manifest(path, **kwargs):
 
 @click.command()
 @click.argument("path")
+@click.argument("version")
 @click.option("--no-clean", "-n", is_flag=True, help="Preserve files")
 @click.option("--commit", "-c", is_flag=True, help="Auto-commit")
-def codebase(path, no_clean: bool = False, commit: bool = False):
+@click.option("--rename", "-r", is_flag=True, help="Rename fields")
+def codebase(
+    path: str,
+    version: str,
+    no_clean: bool = False,
+    commit: bool = False,
+    rename: bool = False,
+):
     """Generate code base from source."""
 
     if commit:
@@ -152,7 +160,11 @@ def codebase(path, no_clean: bool = False, commit: bool = False):
     odoo = Odoo.load_path(path)
 
     for name, module in odoo.modules.items():
-        module.write(not no_clean)
+        module.set_version(version)
+        module.write(clean=not no_clean)
+
+        if rename:
+            module.rename()
 
         if commit:
             git.commit(f"[IMP] {name}: codebase")
